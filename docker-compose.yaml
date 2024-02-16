@@ -1,0 +1,13 @@
+version: "3.7"
+
+services:
+  app:
+    build: .
+    ports:
+      - '3838:3838'
+    volumes:
+      - app_db:/srv/shiny-server/db
+
+volumes:
+  app_db:
+    driver: local
