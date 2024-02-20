@@ -1,0 +1,4 @@
+app/*.Rproj
+app/.Rhistory
+app/create_db.R
+app/login_database.sqlite
