@@ -2,6 +2,9 @@ library(shiny)
 library(shinymanager)
 library(RSQLite)
 
+#options(shiny.host = "127.0.0.1")
+options(shiny.port = 3838)
+
 ui <- fluidPage(
   titlePanel("Test authentification"),
   uiOutput("myinput"),
