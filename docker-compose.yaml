@@ -6,7 +6,7 @@ services:
     ports:
       - '3838:3838'
     volumes:
-      - app_db:/srv/shiny-server/login_db.sqlite
+      - app_db:/srv/shiny-server/db
 
 volumes:
   app_db:
