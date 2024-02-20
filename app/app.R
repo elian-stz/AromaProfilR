@@ -1,6 +1,5 @@
 library(shiny)
 library(shinymanager)
-library(RSQLite)
 
 #options(shiny.host = "127.0.0.1")
 options(shiny.port = 3838)
@@ -31,7 +30,7 @@ server <- function(input, output, session) {
   # check_credentials returns a function to authenticate users
   res_auth <- secure_server(
     check_credentials = check_credentials(
-      db = "./login_database.sqlite",
+      db = "./login_db.sqlite",
       passphrase = "testpass"
     )
   )

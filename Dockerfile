@@ -6,8 +6,10 @@ RUN rm -rf /srv/shiny-server/* \
 		libssl-dev \
 		libsodium-dev \
 		sqlite \
-	&& R -e "install.packages(c('shinymanager'))"
+	&& R -e "install.packages(c('shinymanager', 'keyring'))"
 
 WORKDIR /srv/shiny-server/
 
 COPY ./app/* .
+
+RUN make
