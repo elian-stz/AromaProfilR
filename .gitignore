@@ -1,3 +1,0 @@
-app/.*
-app/create_db.R
-app/login_database.sqlite
