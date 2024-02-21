@@ -6,10 +6,15 @@ RUN rm -rf /srv/shiny-server/* \
 		libssl-dev \
 		libsodium-dev \
 		sqlite \
+		vim \
 	&& R -e "install.packages(c('shinymanager', 'keyring'))"
 
 WORKDIR /srv/shiny-server/
 
-COPY ./app/* ./Makefile ./
+COPY ./app/*.R ./
 
-RUN make
+RUN mkdir ./db
+
+RUN chown -R shiny:shiny ./db
+
+USER shiny

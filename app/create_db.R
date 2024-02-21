@@ -13,6 +13,6 @@ credentials <- data.frame(
 # Create the database
 create_db(
 	credentials_data = credentials,
-	sqlite_path = "./login_db.sqlite", # will be created
+	sqlite_path = "./db/login_db.sqlite", # will be created
 	passphrase = "testpass"#key_get("R-shinymanager-key", "test")
 )

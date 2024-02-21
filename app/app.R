@@ -30,7 +30,7 @@ server <- function(input, output, session) {
   # check_credentials returns a function to authenticate users
   res_auth <- secure_server(
     check_credentials = check_credentials(
-      db = "./login_db.sqlite",
+      db = "./db/login_db.sqlite",
       passphrase = "testpass"
     )
   )

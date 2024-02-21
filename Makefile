@@ -1,11 +1,23 @@
-.PHONY: all
+DC?=docker-compose
+EXEC?=$(DC) exec app
 
-all: clean
+build:
+	$(DC) pull --ignore-pull-failures
+	$(DC) build --force-rm
 
-clean: init-db
-	rm create_db.R
+up:
+	$(DC) up -d --remove-orphans
 
-init-db:
-	if ! [ -f login_db.sqlite ]; then \
-		Rscript create_db.R; \
-	fi
+down:
+	$(DC) down
+
+db-init:
+	$(EXEC) Rscript create_db.R
+
+db-rm:
+	$(EXEC) rm db/login_db.sqlite
+
+#init-db:
+#	if ! [ -f login_db.sqlite ]; then \
+#		Rscript create_db.R; \
+#	fi
