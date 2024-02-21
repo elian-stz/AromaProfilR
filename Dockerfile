@@ -10,6 +10,6 @@ RUN rm -rf /srv/shiny-server/* \
 
 WORKDIR /srv/shiny-server/
 
-COPY ./app/* .
+COPY ./app/* ./Makefile ./
 
 RUN make
