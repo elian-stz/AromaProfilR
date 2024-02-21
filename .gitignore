@@ -1,3 +1,4 @@
 app/*.Rproj
 app/.Rhistory
-app/login_db.sqlite
+app/db/
+app/db/*
