@@ -17,7 +17,8 @@ db-init:
 db-rm:
 	$(EXEC) rm db/login_db.sqlite
 
-#init-db:
-#	if ! [ -f login_db.sqlite ]; then \
-#		Rscript create_db.R; \
-#	fi
+install:
+	$(DC) pull --ignore-pull-failures
+	$(DC) build --force-rm
+	$(DC) up -d --remove-orphans
+	$(EXEC) Rscript create_db.R

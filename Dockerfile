@@ -7,7 +7,7 @@ RUN rm -rf /srv/shiny-server/* \
 		libsodium-dev \
 		sqlite \
 		vim \
-	&& R -e "install.packages(c('shinymanager', 'keyring'))"
+	&& R -e "install.packages(c('shinymanager'))"
 
 WORKDIR /srv/shiny-server/
 

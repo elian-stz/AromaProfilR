@@ -31,7 +31,7 @@ server <- function(input, output, session) {
   res_auth <- secure_server(
     check_credentials = check_credentials(
       db = "./db/login_db.sqlite",
-      passphrase = "testpass"
+      passphrase = Sys.getenv("DB_PASSPHRASE") # Issue: server disconnect when env
     )
   )
 
@@ -53,5 +53,5 @@ server <- function(input, output, session) {
     
   })
 }
-
+cat(Sys.getenv("DB_PASSPHRASE"))
 shinyApp(ui, server)

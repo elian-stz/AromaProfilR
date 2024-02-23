@@ -1,29 +1,28 @@
 ###########################################################
-# Create an encrypted SQLite database			  #
-# passphrase: testpass					  #
-# Users: ID     password				  #
-#        admin  retraitement2024			  #
-#        user   azerty 					  #
+# Create an encrypted SQLite database                     #
 ###########################################################
 
 library(shinymanager)
-#library(keyring)
 
 createSQLiteDB <- function() {
+	# environment variables
+	db.passphrase  <- Sys.getenv("DB_PASSPHRASE")
+	admin.id       <- Sys.getenv("ADMIN_ID")
+	admin.password <- Sys.getenv("ADMIN_PASSWORD")
+
 	# data.frame with credentials info
 	credentials <- data.frame(
-		user = c("user", "admin"), # mandatory
-		password = c("azerty", "retraitement2024"), # mandatory
-		admin = c(FALSE, TRUE),
+		user = c(admin.id), # mandatory
+		password = c(admin.password), # mandatory
+		admin = c(TRUE),
 		stringsAsFactors = FALSE
 	)
 
-	#key_set("R-shinymanager-key", "test")
 	# Create the encrypted database
-	create_db(
-		credentials_data = credentials,
-		sqlite_path = "./db/login_db.sqlite", # will be created
-		passphrase = "testpass"#key_get("R-shinymanager-key", "test")
+	shinymanager::create_db(
+				credentials_data = credentials,
+				sqlite_path = "./db/login_db.sqlite",
+				passphrase = db.passphrase
 	)
 }
 
@@ -32,6 +31,7 @@ main <- function() {
 	else {
 		cat("Do you really want to overwrite the database? (y/n)\n")
 		choice <- readLines("stdin", 1)
+		choice <- tolower(choice)
 		if (choice == "y" | choice == "yes") {createSQLiteDB()}
 	}
 
