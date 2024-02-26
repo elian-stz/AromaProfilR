@@ -1,6 +1,6 @@
 # stage_retraitement_GCMS
 
-# How to install
+## How to install
 
 1. Git clone the project
 2. Change to the cloned directory, and create a `.Renviron` file that contains this:
@@ -11,8 +11,12 @@ ADMIN_ID=myadmin
 ADMIN_PASSWORD=mypassword
 ```
 
-3. In the same directory, type
+3. In the same directory, type:
 
 ```
 make install
 ```
+
+## Dependencies
+
+* Docker

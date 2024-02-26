@@ -1,6 +1,7 @@
 library(shiny)
 library(shinymanager)
 
+db.passphrase <- Sys.getenv("DB_PASSPHRASE")
 #options(shiny.host = "127.0.0.1")
 options(shiny.port = 3838)
 
@@ -31,7 +32,7 @@ server <- function(input, output, session) {
   res_auth <- secure_server(
     check_credentials = check_credentials(
       db = "./db/login_db.sqlite",
-      passphrase = Sys.getenv("DB_PASSPHRASE") # Issue: server disconnect when env
+      passphrase = db.passphrase
     )
   )
 
@@ -53,5 +54,5 @@ server <- function(input, output, session) {
     
   })
 }
-cat(Sys.getenv("DB_PASSPHRASE"))
+
 shinyApp(ui, server)

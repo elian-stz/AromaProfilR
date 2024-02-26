@@ -11,7 +11,7 @@ RUN rm -rf /srv/shiny-server/* \
 
 WORKDIR /srv/shiny-server/
 
-COPY ./app/*.R ./
+COPY ./app/*.R ./.Renviron ./
 
 RUN mkdir ./db
 

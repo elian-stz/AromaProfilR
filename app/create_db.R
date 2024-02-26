@@ -22,7 +22,7 @@ createSQLiteDB <- function() {
 	shinymanager::create_db(
 				credentials_data = credentials,
 				sqlite_path = "./db/login_db.sqlite",
-				passphrase = db.passphrase
+				passphrase = db.passphrase 
 	)
 }
 
