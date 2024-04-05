@@ -1,6 +1,5 @@
 app/*.Rproj
 app/.Rhistory
-app/db/
-app/db/*
+app/login_db/
 app/.Renviron
 .Renviron

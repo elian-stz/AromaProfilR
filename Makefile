@@ -12,13 +12,13 @@ down:
 	$(DC) down
 
 db-init:
-	$(EXEC) Rscript create_db.R
+	$(EXEC) Rscript create_login_db.R
 
 db-rm:
-	$(EXEC) rm db/login_db.sqlite
+	$(EXEC) rm login_db/login_db.sqlite
 
 install:
 	$(DC) pull --ignore-pull-failures
 	$(DC) build --force-rm
 	$(DC) up -d --remove-orphans
-	$(EXEC) Rscript create_db.R
+	$(EXEC) Rscript create_login_db.R

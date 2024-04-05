@@ -2,7 +2,7 @@
 # Create an encrypted SQLite database                     #
 ###########################################################
 
-library(shinymanager)
+require(shinymanager)
 
 createSQLiteDB <- function() {
 	# environment variables
@@ -10,10 +10,10 @@ createSQLiteDB <- function() {
 	admin.id       <- Sys.getenv("ADMIN_ID")
 	admin.password <- Sys.getenv("ADMIN_PASSWORD")
 
-	# data.frame with credentials info
+	# dataframe with credentials info
 	credentials <- data.frame(
-		user = c(admin.id), # mandatory
-		password = c(admin.password), # mandatory
+		user = c(admin.id),
+		password = c(admin.password),
 		admin = c(TRUE),
 		stringsAsFactors = FALSE
 	)
@@ -21,20 +21,19 @@ createSQLiteDB <- function() {
 	# Create the encrypted database
 	shinymanager::create_db(
 				credentials_data = credentials,
-				sqlite_path = "./db/login_db.sqlite",
-				passphrase = db.passphrase 
+				sqlite_path = "./login_db/login_db.sqlite",
+				passphrase = db.passphrase
 	)
 }
 
 main <- function() {
-	if (!file.exists("./db/login_db.sqlite")) {createSQLiteDB()}
+	if (!file.exists("./login_db/login_db.sqlite")) createSQLiteDB()
 	else {
 		cat("Do you really want to overwrite the database? (y/n)\n")
 		choice <- readLines("stdin", 1)
 		choice <- tolower(choice)
-		if (choice == "y" | choice == "yes") {createSQLiteDB()}
+		if (choice == "y" | choice == "yes") createSQLiteDB()
 	}
-
 }
 
 main()
