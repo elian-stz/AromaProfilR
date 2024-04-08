@@ -2,6 +2,9 @@ require(shiny)
 require(shinymanager)
 source("edit_knowledge_base.R")
 
+# Initialize files
+knowledge.base.commit.logs()
+
 # Environment variables
 db.passphrase <- Sys.getenv("DB_PASSPHRASE")
 admin1.mail <- Sys.getenv("ADMIN1_MAIL")
@@ -18,13 +21,20 @@ load(rdata.file, envir=.GlobalEnv)
 options(shiny.port = 3838)
 
 ui <- fluidPage(
-  titlePanel("Test authentification"),
-  
+  titlePanel("Edit the knowledge base"),
+  sidebarLayout(
+      sidebarPanel(
+          textInput(
+              inputId = "remove.cas",
+              label = "Enter CAS number(s) separated by spaces"
+              ),
+      actionButton("submit", "Submit")
+      ),
       mainPanel(
-          textInput(inputId="cas.numbers", label="Query"),
-          selectInput("separator", "Select separator:", choices=c("Comma", "Space", "Tab")),
-          actionButton("confirmButton", "Confirm")
+          verbatimTextOutput("kb.logs")
       )
+  )
+  
 )
 
 # Wrap UI with secure_app
@@ -43,18 +53,23 @@ ui <- secure_app(ui,
 )
 
 server <- function(input, output, session) {
-  # call the server part
-  # check_credentials returns a function to authenticate users
-  res_auth <- secure_server(
-    check_credentials = check_credentials(
-      db = "./login_db/login_db.sqlite",
-      passphrase = db.passphrase
-    )
-  )
-
-  output$myinput <- renderUI({
-        
-  })
+    # call the server part
+    # check_credentials returns a function to authenticate users
+    res_auth <- secure_server(
+        check_credentials = check_credentials(
+            db = "./login_db/login_db.sqlite",
+            passphrase = db.passphrase
+            )
+        )
+    
+    observeEvent(input$submit, {
+        remove.cas.numbers(input$remove.cas)
+    })
+    
+    output$kb.logs <- renderText({
+        file_content <- readLines("knowledge_base_commit.log")
+        paste(file_content, collapse="\n")
+        })
 }
 
 shinyApp(ui, server)

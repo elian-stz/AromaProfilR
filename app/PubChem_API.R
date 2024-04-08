@@ -104,7 +104,7 @@ getPubchemDescriptors <- function(CID, type=c("Odor", "Taste")) {
 
 getFlavornetOdorDescriptors <- function(CID) {
     if (is.na(CID)) return(NA)
-    db <- read.csv("../desc_db/flavornet_odor_descriptors.csv", header=TRUE, na.strings=c("NA", ""))
+    db <- read.csv("./descriptor_db/flavornet_odor_descriptors.csv", header=TRUE, na.strings=c("NA", ""))
     CID <- as.numeric(CID)
     db <- db[db$CID == CID, "odor_flavornet"]
     if (identical(db, character(0))) return(NA)
@@ -112,7 +112,7 @@ getFlavornetOdorDescriptors <- function(CID) {
 }
 
 getGoodScentsOdorDescriptors <- function(CAS) {
-    db <- read.csv("../desc_db/goodscents_odor_descriptors.csv", header=TRUE, na.strings=c("NA", ""))
+    db <- read.csv("./descriptor_db/goodscents_odor_descriptors.csv", header=TRUE, na.strings=c("NA", ""))
     db <- db[db$CAS == CAS, "odor_goodscents"]
     if (identical(db, character(0))) return(NA)
     return(db)
