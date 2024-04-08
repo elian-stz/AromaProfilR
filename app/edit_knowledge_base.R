@@ -1,20 +1,30 @@
 remove.cas.numbers <- function(text) {
-    cas.numbers <- strsplit(text, split=" ")
-    isCAS <- all(unname(sapply(cas.numbers, webchem::is.cas)))
-    # Check if CAS existing in knowledge base
+    if (text == "") {
+        showNotification("Enter at least one CAS registry number")
+        return()
+    }
+    
+    cas.numbers <- unlist(strsplit(text, split=" "))
+    isCAS <- all(grepl(cas.numbers, pattern="\\d{2,7}-\\d{2}-\\d"))
     if (isCAS) {
         save.knowledge.base(overwrite=FALSE)
-        cas.numbers <- paste("CAS_", cas.numbers, sep="")
-        knowledge.base <- knowledge.base[names(knowledge.base) != cas.numbers]
-        save.knowledge.base(overwrite=TRUE)
-        message <- paste("Removed ", length(cas.numbers), " CAS registry number(s): ",
-                         paste(cas.numbers, collapse=", "),
-                         sep=""
-                         )
-        knowledge.base.commit.logs(message)
-        showNotification(paste("Succesfully removed ", length(cas.numbers), " CAS registry numbers(s)"), type="message")
+        cas.numbers <- unique(cas.numbers)
+        cas.numbers.prefix <- paste("CAS_", cas.numbers, sep="")
+        queriedCASinKB <- length(knowledge.base[(names(knowledge.base) %in% cas.numbers.prefix)])
+        if (queriedCASinKB > 0) { # check if compound is the knowledge base
+            knowledge.base <- knowledge.base[!(names(knowledge.base) %in% cas.numbers.prefix)]
+            save.knowledge.base(overwrite=TRUE)
+            message <- paste("Removed ", length(cas.numbers), " CAS registry number(s): ",
+                             paste(cas.numbers, collapse=", "),
+                             sep=""
+                             )
+            knowledge.base.commit.logs(message)
+            showNotification(paste("Succesfully removed ", length(cas.numbers), " CAS registry numbers(s)"), type="message")
+        } else {
+            showNotification("Input not in the knowledge base", type="warning")
+        }
     } else {
-        showNotification("Input text is not CAS registry number(s)", type="error")
+        showNotification("Input does not contain CAS registry number(s)", type="error")
     }
 }
 
@@ -45,7 +55,6 @@ knowledge.base.commit.logs <- function(message=NA) {
     if (!file.exists(logfile)) {
         system(paste("echo ", Sys.time(), " > ", logfile, sep=""))
         system(paste("echo 'Compound knowledge base first version' >> ", logfile, sep=""))
-        return()
     }
     
     if (!is.na(message)) {

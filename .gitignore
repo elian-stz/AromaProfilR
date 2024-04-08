@@ -2,7 +2,7 @@ app/*.Rproj
 app/.Rhistory
 app/login_db/
 app/.Renviron
-app/edit_knowledge_commit.log
+app/knowledge_base_commit.log
 app/previous_compound_knowledge_bases/
 .Renviron
 .Rhistory
