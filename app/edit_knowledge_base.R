@@ -5,13 +5,11 @@ remove.cas.numbers <- function(text) {
     }
     
     cas.numbers <- unlist(strsplit(text, split=" "))
-    isCAS <- all(grepl(cas.numbers, pattern="\\d{2,7}-\\d{2}-\\d"))
-    if (isCAS) {
-        save.knowledge.base(overwrite=FALSE)
+    if (isCAS(cas.numbers)) {
         cas.numbers <- unique(cas.numbers)
         cas.numbers.prefix <- paste("CAS_", cas.numbers, sep="")
-        queriedCASinKB <- length(knowledge.base[(names(knowledge.base) %in% cas.numbers.prefix)])
-        if (queriedCASinKB > 0) { # check if compound is the knowledge base
+        if (isInKnowledgeBase(cas.numbers.prefix)) {
+            save.knowledge.base(overwrite=FALSE)
             knowledge.base <- knowledge.base[!(names(knowledge.base) %in% cas.numbers.prefix)]
             save.knowledge.base(overwrite=TRUE)
             message <- paste("Removed ", length(cas.numbers), " CAS registry number(s): ",
@@ -26,6 +24,23 @@ remove.cas.numbers <- function(text) {
     } else {
         showNotification("Input does not contain CAS registry number(s)", type="error")
     }
+}
+
+################################################################################
+# Verification functions: isCAS, isInKnowledgeBase
+################################################################################
+
+# Check whether the CAS numbers follow the below regex
+isCAS <- function(cas.vector) {
+    return(all(grepl(cas.vector, pattern="^\\d{2,7}-\\d{2}-\\d$")))
+}
+
+# Check whether the CAS numbers are present in the knowledge base
+# Does not append the prefix CAS_
+isInKnowledgeBase <- function(cas.vector) {
+    queriedCASinKnowledgeBase <- length(knowledge.base[(names(knowledge.base) %in% cas.vector)])
+    if (queriedCASinKnowledgeBase < length(cas.vector)) return(FALSE)
+    return(TRUE)
 }
 
 ###############################################################################
