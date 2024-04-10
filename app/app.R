@@ -21,20 +21,39 @@ load(rdata.file, envir=.GlobalEnv)
 options(shiny.port = 3838)
 
 ui <- fluidPage(
+    tags$head(
+        tags$style(
+            HTML(".shiny-notification {
+                 position: fixed;
+             top: calc(1%);
+             left: calc(85%);
+             }
+             "
+            )
+        )
+    ),
   titlePanel("Edit the knowledge base"),
   sidebarLayout(
       sidebarPanel(
           textInput(
               inputId = "remove.cas",
-              label = "Enter CAS number(s) separated by spaces"
+              label = "Enter CAS registry number(s) separated by spaces to remove"
               ),
-      actionButton("submit", "Submit")
+          actionButton("submit.remove", "Submit"),
+          br(), br(),
+          textInput(
+              inputId = "add.cas",
+              label = "Enter a single CAS registry number to add"
+          ),
+          actionButton("submit.add", "Submit")
       ),
       mainPanel(
-          verbatimTextOutput("kb.logs")
+          tags$head(
+              tags$style(HTML("#scrollableText { height: 300px; overflow: auto; }"))
+          ),
+          div(id = "scrollableText", verbatimTextOutput("kb.logs"))
       )
   )
-  
 )
 
 # Wrap UI with secure_app
@@ -62,14 +81,27 @@ server <- function(input, output, session) {
             )
         )
     
-    observeEvent(input$submit, {
+    # REMOVE
+    observeEvent(input$submit.remove, {
+        validate(
+            need(input$remove.cas != "", "Field must not be empty")
+        )
         remove.cas.numbers(input$remove.cas)
     })
     
+    # ADD
+    observeEvent(input$submit.add, {
+        validate(
+            need(input$add.cas != "", "Field must not be empty")
+            )
+        add.single.cas.number(input$add.cas)
+    })
+    
     output$kb.logs <- renderText({
+        invalidateLater(2000, session)
         file_content <- readLines("knowledge_base_commit.log")
         paste(file_content, collapse="\n")
-        })
+    })
 }
 
 shinyApp(ui, server)
