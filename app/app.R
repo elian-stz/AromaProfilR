@@ -23,15 +23,20 @@ options(shiny.port = 3838)
 ui <- fluidPage(
     tags$head(
         tags$style(
-            HTML(".shiny-notification {
+            HTML("#shiny-notification-panel {
                  position: fixed;
-             top: calc(1%);
-             left: calc(85%);
-             }
-             "
+                 top: 0px;
+                 right: 0px;
+                 background-color: #00000000;
+                 padding: 2px;
+                 width: 300px;
+                 max-width: 100%;
+                 z-index: 999999
+                 }
+                 "
+                 )
             )
-        )
-    ),
+        ),
   titlePanel("Edit the knowledge base"),
   sidebarLayout(
       sidebarPanel(
@@ -45,11 +50,17 @@ ui <- fluidPage(
               inputId = "add.cas",
               label = "Enter a single CAS registry number to add"
           ),
-          actionButton("submit.add", "Submit")
+          actionButton("submit.add", "Submit"),
+          br(), br(),
+          textInput(
+              inputId = "prefilled.template",
+              label = "Enter CAS registry number(s) separated by spaces to edit"
+          ),
+          downloadLink("download", "Download template")
       ),
       mainPanel(
           tags$head(
-              tags$style(HTML("#scrollableText { height: 300px; overflow: auto; }"))
+              tags$style(HTML("#scrollableText { height: 500px; overflow: auto; }"))
           ),
           div(id = "scrollableText", verbatimTextOutput("kb.logs"))
       )
@@ -91,11 +102,23 @@ server <- function(input, output, session) {
     
     # ADD
     observeEvent(input$submit.add, {
+        shinyjs::disable("submit.add")
+        # change cursor
         validate(
             need(input$add.cas != "", "Field must not be empty")
             )
         add.single.cas.number(input$add.cas)
+        shinyjs::enable("submit.add")
     })
+    
+    
+    # GENERATE TEMPLATE
+    output$download <- downloadHandler(
+        filename = function() paste(Sys.Date(), "_template.csv", sep=""),
+        content = function(con) {
+                write.csv(generate.prefilled.template(input$prefilled.template), con, row.names=FALSE)
+            }
+        )
     
     output$kb.logs <- renderText({
         invalidateLater(2000, session)

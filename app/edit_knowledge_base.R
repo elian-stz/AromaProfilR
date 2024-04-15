@@ -14,39 +14,38 @@ remove.cas.numbers <- function(text.field) {
                              sep=""
                              )
             knowledge.base.commit.logs(message)
-            showNotification(paste("Succesfully removed ", length(cas.numbers), " CAS registry numbers(s)"), type="message")
-        } else showNotification("Input not present in the knowledge base", type="error")
-    } else showNotification("Input must contain CAS registry number(s)", type="error")
+            notification("success.n.removal", length(cas.numbers))
+        } else notification("input.not.present")
+    } else notification("not.cas")
 }
 
 add.single.cas.number <- function(text.field) {
     if (isCAS(text.field)) {
         cas.prefix <- paste("CAS_", text.field, sep="")
         if (!isInKnowledgeBase(cas.prefix)) {
-            cid <- cas2cid(text.field)
+            cid <- cas2cid(text.field) # 2 NCBI queries
             if (!is.na(cid) && length(cid) == 1) {
                 save.knowledge.base(knowledge.base, overwrite=FALSE)
-                knowledge.base[[cas.prefix]] <- getEntryInfo(cid, text.field)
+                knowledge.base[[cas.prefix]] <- get.entry.info(cid, text.field)
                 save.knowledge.base(knowledge.base, overwrite=TRUE)
                 message <- paste("Added 1 CAS registry number: ", text.field, sep="")
                 knowledge.base.commit.logs(message)
-                showNotification(paste("Succesfully added 1 CAS registry number"), type="message")
+                notification("success.one.addition")
             } else {
-                if (is.na(cid) || length(cid) == 0) showNotification("Entry cannot be added: impossible to convert the input into PubChem CID",
-                                                       type="error")
-                if (length(cid) > 1) showNotification("Entry cannot be added: more than one CID returned. Choose another method.", type="error")
+                if (is.na(cid) || length(cid) == 0) notification("no.cid")
+                if (length(cid) > 1) notification("too.many.cid", length(cid))
             }
-        } else showNotification("CAS registry number already present in the knowledge base", type="warning")
-    } else showNotification("Input must be a single CAS registry number", type="error")
+        } else notification("input.already.present")
+    } else notification("single.cas")
 }
 
-getEntryInfo <- function(cid, cas) {
+get.entry.info <- function(cid, cas) {
     properties <- getPropertiesFromCID(cid)
     smiles <- properties$CanonicalSMILES
     
     common_name <- getCommonName(cid)
-    LRI_polar <- getLRI(cid, type="polar", canonicalSMILES=smiles)
     Sys.sleep(1)
+    LRI_polar <- getLRI(cid, type="polar", canonicalSMILES=smiles)
     LRI_nonpolar <- getLRI(cid, type="non-polar", canonicalSMILES=smiles)
     odor_pubchem <- getPubchemDescriptors(cid, type="Odor")
     taste_pubchem <- getPubchemDescriptors(cid, type="Taste")
@@ -70,8 +69,35 @@ getEntryInfo <- function(cid, cas) {
     return(entry)
 }
 
+generate.prefilled.template <- function(text.field) {
+    if (tolower(text.field) == "empty" || text.field == "") return(empty.template())
+    if (tolower(text.field) == "all") return(knowledge.base.to.dataframe(knowledge.base))
+    
+    cas.numbers <- unlist(strsplit(text.field, split=" "))
+    if (isCAS(cas.numbers)) {
+        cas.numbers <- unique(cas.numbers)
+        cas.prefix <- paste("CAS_", cas.numbers, sep="")
+        query <- knowledge.base[names(knowledge.base) %in% cas.prefix]
+        query <- knowledge.base.to.dataframe(query)
+        return(query)
+    }
+    notification("not.cas")
+    return(knowledge.base.to.dataframe(knowledge.base))
+}
+
+empty.template <- function() {
+    header <- names(knowledge.base[[1]])
+    df <- as.data.frame(matrix(nrow=0, ncol=length(header)))
+    colnames(df) <- header
+    return(df)
+}
+
+edit.with.template <- function(df) {
+    
+}
+
 ################################################################################
-# Verification functions: isCAS, isInKnowledgeBase
+# Verification functions: isCAS, isInKnowledgeBase, notification
 ################################################################################
 
 # Check whether the CAS numbers follow the below regex
@@ -87,8 +113,26 @@ isInKnowledgeBase <- function(cas.vector) {
     return(TRUE)
 }
 
-###############################################################################
-# Save, reload and logs functions
+notification <- function(type, number=NA) {
+    switch (type,
+        "input.not.present" = showNotification("Input not present in the knowledge base", type="error"),
+        "input.already.present" = showNotification("Input already present in the knowledge base", type="warning"),
+        "not.cas" = showNotification("Input must contain CAS registry number(s)", type="error"),
+        "single.cas" = showNotification("Input must be a single CAS registry number", type="error"),
+        "too.many.cid" = showNotification(paste("Entry cannot be added: ", number,
+                                                " PubChem CIDs returned instead of one. Choose another method.",
+                                                sep=""),
+                                          type="error"),
+        "no.cid" = showNotification("Entry cannot be added: impossible to convert the input into PubChem CID", type="error"),
+        "success.one.addition" = showNotification("Succesfully added 1 CAS registry number", type="message"),
+        "success.n.removal" = showNotification(paste("Succesfully removed ", number, " CAS registry numbers(s)",
+                                                     sep=""),
+                                               type="message")
+    )
+}
+
+################################################################################
+# Save, reload, convert, and logs functions
 ################################################################################
 
 save.knowledge.base <- function(kb, overwrite) {
@@ -122,4 +166,32 @@ knowledge.base.commit.logs <- function(message=NA) {
         system(bash.append.from.bottom.to.top(message=message, file=logfile))
         system(bash.append.from.bottom.to.top(message=Sys.time(), file=logfile))
     }
+}
+
+convert_to_string <- function(list_vec) {
+    # Convert each vector to a string and concatenate with ";"
+    str <- paste(unlist(list_vec), collapse = ";")
+    return(str)
+}
+
+convert_list_column <- function(df, column_name) {
+    df[[column_name]] <- apply(df, 1, function(row) {
+        convert_to_string(row[[column_name]])
+    })
+    return(df)
+}
+
+knowledge.base.to.dataframe <- function(list.of.lists) {
+    # Load and convert knowledge base to dataframe
+    # Separators are semi-columns for vector-like data structures
+    df <- as.data.frame(do.call(rbind, list.of.lists))
+    
+    # Change types
+    col <- colnames(df)
+    col <- col[!col %in%  c("CID_all", "LRI_polar", "LRI_nonpolar")]
+    df[col] <- lapply(df[col], unlist)
+    df <- convert_list_column(df, "CID_all") 
+    df <- convert_list_column(df, "LRI_polar")
+    df <- convert_list_column(df, "LRI_nonpolar")
+    return(df)
 }
