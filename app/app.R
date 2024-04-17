@@ -23,7 +23,7 @@ options(shiny.port = 3838)
 ui <- fluidPage(
     tags$head(
         tags$style(
-            HTML("#shiny-notification-panel {
+            HTML(c("#shiny-notification-panel {
                  position: fixed;
                  top: 0px;
                  right: 0px;
@@ -33,30 +33,40 @@ ui <- fluidPage(
                  max-width: 100%;
                  z-index: 999999
                  }
-                 "
+                 ", "hr {border-top: 0.5px solid #000000;}"
+            )
                  )
             )
         ),
   titlePanel("Edit the knowledge base"),
   sidebarLayout(
       sidebarPanel(
+          tags$h2("Edit entries"),
           textInput(
-              inputId = "remove.cas",
-              label = "Enter CAS registry number(s) separated by spaces to remove"
-              ),
-          actionButton("submit.remove", "Submit"),
-          br(), br(),
+              inputId = "prefilled.template",
+              label = "Enter CAS registry number(s) separated by spaces to edit"
+          ),
+          downloadLink("download", "Download template"),
+          br(),
+          fileInput("upload.template", "Upload the filled template", accept=c(".csv")),
+          
+          tags$hr(),
+          
+          tags$h2("Add an entry"),
           textInput(
               inputId = "add.cas",
               label = "Enter a single CAS registry number to add"
           ),
           actionButton("submit.add", "Submit"),
-          br(), br(),
+          
+          tags$hr(),
+          
+          tags$h2("Remove entries"),
           textInput(
-              inputId = "prefilled.template",
-              label = "Enter CAS registry number(s) separated by spaces to edit"
+              inputId = "remove.cas",
+              label = "Enter CAS registry number(s) separated by spaces to remove"
           ),
-          downloadLink("download", "Download template")
+          actionButton("submit.remove", "Submit"),
       ),
       mainPanel(
           tags$head(
@@ -124,6 +134,18 @@ server <- function(input, output, session) {
         invalidateLater(2000, session)
         file_content <- readLines("knowledge_base_commit.log")
         paste(file_content, collapse="\n")
+    })
+    
+    observeEvent(input$upload.template, {
+        dataframe <- read.csv(input$upload.template$datapath, sep=",", na.strings=c("", "NA"))
+        colnames(dataframe)[colnames(dataframe) == "molecular_weight_g.mol.1"] <- "molecular_weight_g.mol-1"
+        edit.with.template(dataframe)
+#        ext <- tools::file_ext(input$upload$name)
+#        switch(ext,
+#               csv = vroom::vroom(input$upload$datapath, delim = ","),
+#               tsv = vroom::vroom(input$upload$datapath, delim = "\t"),
+#               validate("Invalid file; Please upload a .csv or .tsv file")
+#        )
     })
 }
 

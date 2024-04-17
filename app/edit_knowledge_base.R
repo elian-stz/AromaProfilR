@@ -92,8 +92,77 @@ empty.template <- function() {
     return(df)
 }
 
+# TODO what to display on the template file: the previous info or the flag
+# TODO type of non-str values
+# TODO checking separators for vector-like structures
+
 edit.with.template <- function(df) {
+    # Checking colnames
+    header = colnames(empty.template())
+    missing_columns <- setdiff(header, colnames(df))
     
+    # Tracking new or edited entries
+    new.entry.list <- list()
+    edited.entry.list <- list()
+    
+    if (length(missing_columns) == 0) {
+        for (row in 1:nrow(df)) {
+            cas <- df[row, "CAS"]
+            if (isCAS(cas)) {
+                cas.prefix <- paste("CAS_", cas, sep="")
+                if (isInKnowledgeBase(cas.prefix)) {
+                    edited.entry <- template.to.entry(df[row, ], "edit.existing")
+                    edited.entry.list[[cas.prefix]] <- edited.entry
+                } else {
+                    new.entry <- template.to.entry(df[row, ], "add")
+                    new.entry.list[[cas.prefix]] <- new.entry
+                }
+            }
+        }
+        all.entries <- list(new.entry.list, edited.entry.list)
+        save.knowledge.base(knowledge.base, overwrite=FALSE)
+        for (i in 1:length(all.entries)) {
+            knowledge.base[names(all.entries[[i]])] <- all.entries[[i]]
+        }
+        save.knowledge.base(knowledge.base, overwrite=TRUE)
+        message1 <- paste("Edited ", length(edited.entry.list), " existing entry(ies): ",
+                         paste(gsub("CAS_", "", names(edited.entry.list)), collapse=", "),
+                         sep=""
+        )
+        message2 <- paste("Added ", length(new.entry.list), " new entry(ies): ",
+                          paste(gsub("CAS_", "", names(new.entry.list)), collapse=", "),
+                          sep=""
+        )
+        knowledge.base.commit.logs(message1, message2)
+        notification("success.template.edition", length(all.entries))
+    } else notification("template.wrong.colnames")
+}
+
+template.to.entry <- function(df, type=c("edit.existing", "add")) {
+    # Identify each type of column:
+    ## CID is integer
+    ## LRIs, molecular weight, and XLogP are double
+    ## Rest is characters
+    header <- colnames(empty.template())
+    vector.like.col <- c("LRI_polar", "LRI_nonpolar")
+    col <- header[!(header %in% vector.like.col)]
+    
+    flag <- "keep.previous" # flag to keep the previous value
+    entry <- list()
+    cas.prefix <- paste("CAS_", df[1, "CAS"], sep="")
+    
+    for (attribute in header) {
+        current.cell <- df[1, attribute]
+        if (type == "edit.existing" && (tolower(current.cell) == flag || is.na(current.cell))) {
+            entry[[attribute]] <- knowledge.base[[cas.prefix]][[attribute]]
+        } else {
+            if (attribute %in% col) entry[[attribute]] <- current.cell
+            if (attribute %in% vector.like.col) {
+                entry[[attribute]] <- as.double(unlist(strsplit(current.cell, split=";")))
+            }
+        }
+    }
+    return(entry)
 }
 
 ################################################################################
@@ -127,7 +196,9 @@ notification <- function(type, number=NA) {
         "success.one.addition" = showNotification("Succesfully added 1 CAS registry number", type="message"),
         "success.n.removal" = showNotification(paste("Succesfully removed ", number, " CAS registry numbers(s)",
                                                      sep=""),
-                                               type="message")
+                                               type="message"),
+        "template.wrong.colnames" = showNotification("Input file has different column names than expected.", type="error"),
+        "success.template.edition" = showNotification(paste("Succesfully edited ", number, " entry(ies)", sep=""), type="message")
     )
 }
 
@@ -154,16 +225,17 @@ bash.append.from.bottom.to.top <- function(message, file) {
     return(paste("echo '", message, "' | cat - ", file, " > temp && mv temp ", file, sep=""))
 }
 
-knowledge.base.commit.logs <- function(message=NA) {
+knowledge.base.commit.logs <- function(message1=NA, message2=NA) {
     logfile <- "knowledge_base_commit.log"
     if (!file.exists(logfile)) {
         system(paste("echo ", Sys.time(), " > ", logfile, sep=""))
         system(paste("echo 'Compound knowledge base first version' >> ", logfile, sep=""))
     }
     
-    if (!is.na(message)) {
+    if (!is.na(message1)) {
         system(bash.append.from.bottom.to.top(message="", file=logfile))
-        system(bash.append.from.bottom.to.top(message=message, file=logfile))
+        system(bash.append.from.bottom.to.top(message=message1, file=logfile))
+        if (!is.na(message2)) system(bash.append.from.bottom.to.top(message=message2, file=logfile))
         system(bash.append.from.bottom.to.top(message=Sys.time(), file=logfile))
     }
 }

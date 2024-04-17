@@ -29,7 +29,7 @@ getPropertiesFromCID <- function(CID) {
     # Query NCBI
     columns = c("MolecularWeight", "CanonicalSMILES", "IUPACName", "XLogP")
     properties <- try(webchem::pc_prop(cid=CID, properties=columns))
-    if (inherits(properties, "try-error") | length(properties) == 0) return(empty_dataframe)
+    if (inherits(properties, "try-error") || length(properties) == 0) return(empty_dataframe)
     
     # Check if all columns are here, otherwise append column with NA
     missing_columns <- setdiff(columns, colnames(properties))
@@ -48,7 +48,7 @@ getPropertiesFromCID <- function(CID) {
 getCommonName <- function(CID) {
     if (is.na(CID)) return(NA)
     df <- try(webchem::pc_sect(id=CID, section="Synonyms"))
-    if (inherits(df, "try-error") | length(df) == 0) return(NA)
+    if (inherits(df, "try-error") || length(df) == 0) return(NA)
     df <- df[1, "Name"]
     df <- toString(df)
     return(df)
@@ -59,8 +59,7 @@ getLRI <- function(CID, type=c("polar", "non-polar", "semi-standard non-polar"),
     
     # Check if compound is an n-alkane (linear)
     if (!is.na(canonicalSMILES)) {
-        canonicalSMILES <- tolower(canonicalSMILES)
-        if (grepl("^c+$", canonicalSMILES)) return(nchar(canonicalSMILES) * 100)
+        if (grepl("^c+$", tolower(canonicalSMILES))) return(nchar(canonicalSMILES) * 100)
     }
     
     # Attribute local var depending on type argument
@@ -71,7 +70,7 @@ getLRI <- function(CID, type=c("polar", "non-polar", "semi-standard non-polar"),
     
     # Query NCBI
     df <- try(PubChemR::get_pug_view(identifier=CID, domain="compound", heading="Kovats Retention Index", annotation = "Data"))
-    if (inherits(df, "try-error") | length(df) == 0) return(NA)
+    if (inherits(df, "try-error") || length(df) == 0) return(NA)
     
     # Loop through LRI types: polar, non-polar, semi-standard non-polar or all column types
     lri.section <- df$Record$Section[[1]]$Section[[1]]$Section[[1]]$Information
