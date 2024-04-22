@@ -14,6 +14,7 @@ admin3.mail <- Sys.getenv("ADMIN3_MAIL")
 # Rdata
 ## knowledge.base is the variable that contains the compound knowledge base
 rdata.file <<- "compound_knowledge_base.Rdata"
+#knowledge.base <<- readRDS(rdata.file)
 load(rdata.file, envir=.GlobalEnv)
 
 # Port options
@@ -33,7 +34,7 @@ ui <- fluidPage(
                  max-width: 100%;
                  z-index: 999999
                  }
-                 ", "hr {border-top: 0.5px solid #000000;}"
+                 ", "hr {border-top: 0.5px solid #636363;}"
             )
                  )
             )
@@ -42,35 +43,47 @@ ui <- fluidPage(
   sidebarLayout(
       sidebarPanel(
           tags$h2("Edit entries"),
-          textInput(
-              inputId = "prefilled.template",
-              label = "Enter CAS registry number(s) separated by spaces to edit"
+          tags$ol(
+              tags$li("Generate a pre-filled template CSV"),
+              textInput(
+                  inputId = "prefilled.template",
+                  label = HTML("Enter CAS registry number(s) separated by spaces, or type <code>all</code> or <code>empty</code>")
+              ),
+              downloadLink("download", "Download template"),
+              br(),br(),
+              tags$li("Edit the template"),
+              tags$ul(
+                  tags$li("Modify existing entries or add new ones"),
+                  tags$li("Decimal separators must be points"),
+                  tags$li("LRI values must be separated by semicolons (;)"),
+                  tags$li(HTML("Use the <code>keep.previous</code> flag to keep previous information")),
+              ),
+              br(),
+              tags$li("Submit the edited template file"),
+              fileInput("upload.template", "Upload the filled template", accept=c(".csv")),
           ),
-          downloadLink("download", "Download template"),
-          br(),
-          fileInput("upload.template", "Upload the filled template", accept=c(".csv")),
           
           tags$hr(),
           
           tags$h2("Add an entry"),
           textInput(
               inputId = "add.cas",
-              label = "Enter a single CAS registry number to add"
+              label = "Enter a single CAS registry number"
           ),
-          actionButton("submit.add", "Submit"),
+          actionButton("submit.add", "Add"),
           
           tags$hr(),
           
-          tags$h2("Remove entries"),
-          textInput(
-              inputId = "remove.cas",
-              label = "Enter CAS registry number(s) separated by spaces to remove"
+          tags$h2("Delete entries"),
+          textInput("remove.cas",
+              label = "Enter CAS registry number(s) separated by spaces"
           ),
-          actionButton("submit.remove", "Submit"),
+          actionButton("submit.remove", "Delete"),
       ),
       mainPanel(
+          textOutput("compound.number"),
           tags$head(
-              tags$style(HTML("#scrollableText { height: 500px; overflow: auto; }"))
+              tags$style(HTML("#scrollableText { height: 800px; overflow: auto; }"))
           ),
           div(id = "scrollableText", verbatimTextOutput("kb.logs"))
       )
@@ -113,12 +126,13 @@ server <- function(input, output, session) {
     # ADD
     observeEvent(input$submit.add, {
         shinyjs::disable("submit.add")
-        # change cursor
+        tags$style(HTML(".container-fluid {cursor: wait;}"))
         validate(
             need(input$add.cas != "", "Field must not be empty")
             )
         add.single.cas.number(input$add.cas)
         shinyjs::enable("submit.add")
+        tags$style(HTML(".container-fluid {cursor: default;}"))
     })
     
     
@@ -130,6 +144,10 @@ server <- function(input, output, session) {
             }
         )
     
+    output$compound.number <- renderText({
+        invalidateLater(2000, session)
+        paste("Number of compounds in the knowledge base: ", length(knowledge.base), sep="")
+    })
     output$kb.logs <- renderText({
         invalidateLater(2000, session)
         file_content <- readLines("knowledge_base_commit.log")
@@ -137,7 +155,7 @@ server <- function(input, output, session) {
     })
     
     observeEvent(input$upload.template, {
-        dataframe <- read.csv(input$upload.template$datapath, sep=",", na.strings=c("", "NA"))
+        dataframe <- read.csv(input$upload.template$datapath, sep=",", dec=".", na.strings=c("", "NA"))
         colnames(dataframe)[colnames(dataframe) == "molecular_weight_g.mol.1"] <- "molecular_weight_g.mol-1"
         edit.with.template(dataframe)
 #        ext <- tools::file_ext(input$upload$name)
@@ -151,7 +169,3 @@ server <- function(input, output, session) {
 
 shinyApp(ui, server)
 #if (reactiveValuesToList(res_auth)$admin == TRUE) {
-#    output$role <- renderText("Your role is admin")
-#} else {
-#    output$role <- renderText("Your role is user here")
-#}

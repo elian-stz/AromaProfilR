@@ -147,18 +147,30 @@ template.to.entry <- function(df, type=c("edit.existing", "add")) {
     vector.like.col <- c("LRI_polar", "LRI_nonpolar")
     col <- header[!(header %in% vector.like.col)]
     
+    # Check decimal separators and type of numeric variables
+    df$CID <- as.integer(df$CID)
+    for (attribute in c(vector.like.col, "XLogP", "molecular_weight_g.mol-1")) {
+            if (is.character(df[attribute])) {
+                df[attribute] <- gsub(",", ".", df[attribute])
+        }
+    }
+    df$XLogP <- as.double(df$XLogP)
+    df$`molecular_weight_g.mol-1` <- as.double(df$`molecular_weight_g.mol-1`)
+    
     flag <- "keep.previous" # flag to keep the previous value
     entry <- list()
     cas.prefix <- paste("CAS_", df[1, "CAS"], sep="")
     
+    # Assign each cell of the template to the entry object
     for (attribute in header) {
-        current.cell <- df[1, attribute]
-        if (type == "edit.existing" && (tolower(current.cell) == flag || is.na(current.cell))) {
+        cell <- df[1, attribute]
+        if (type == "edit.existing" && (tolower(cell) == flag || is.na(cell))) {
             entry[[attribute]] <- knowledge.base[[cas.prefix]][[attribute]]
         } else {
-            if (attribute %in% col) entry[[attribute]] <- current.cell
+            if (attribute %in% col) entry[[attribute]] <- cell
             if (attribute %in% vector.like.col) {
-                entry[[attribute]] <- as.double(unlist(strsplit(current.cell, split=";")))
+                values <- unlist(strsplit(cell, split=";"))
+                entry[[attribute]] <- as.double(values)
             }
         }
     }
@@ -260,9 +272,8 @@ knowledge.base.to.dataframe <- function(list.of.lists) {
     
     # Change types
     col <- colnames(df)
-    col <- col[!col %in%  c("CID_all", "LRI_polar", "LRI_nonpolar")]
+    col <- col[!col %in%  c("LRI_polar", "LRI_nonpolar")]
     df[col] <- lapply(df[col], unlist)
-    df <- convert_list_column(df, "CID_all") 
     df <- convert_list_column(df, "LRI_polar")
     df <- convert_list_column(df, "LRI_nonpolar")
     return(df)
