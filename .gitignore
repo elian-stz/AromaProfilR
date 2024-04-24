@@ -1,8 +1,6 @@
-app/*.Rproj
 app/.Rhistory
-app/login_db/
 app/.Renviron
-app/knowledge_base_commit.log
-app/previous_compound_knowledge_bases/
-.Renviron
+app/data/login_db.sqlite
+app/data/knowledge_base_commit.log
+app/data/previous_compound_knowledge_bases/
 .Rhistory

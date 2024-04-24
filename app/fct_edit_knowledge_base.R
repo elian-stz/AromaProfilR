@@ -1,4 +1,5 @@
-source("PubChem_API.R")
+source("fct_PubChem_API.R")
+source("fct_utils.R")
 
 remove.cas.numbers <- function(text.field) {
     cas.numbers <- unlist(strsplit(text.field, split=" "))
@@ -78,6 +79,7 @@ generate.prefilled.template <- function(text.field) {
         cas.numbers <- unique(cas.numbers)
         cas.prefix <- paste("CAS_", cas.numbers, sep="")
         query <- knowledge.base[names(knowledge.base) %in% cas.prefix]
+        if (length(query) < 1) return(empty.template())
         query <- knowledge.base.to.dataframe(query)
         return(query)
     }
@@ -178,43 +180,6 @@ template.to.entry <- function(df, type=c("edit.existing", "add")) {
 }
 
 ################################################################################
-# Verification functions: isCAS, isInKnowledgeBase, notification
-################################################################################
-
-# Check whether the CAS numbers follow the below regex
-isCAS <- function(cas.vector) {
-    return(all(grepl(cas.vector, pattern="^\\d{2,7}-\\d{2}-\\d$")))
-}
-
-# Check whether the CAS numbers are present in the knowledge base
-# Does not append the prefix CAS_
-isInKnowledgeBase <- function(cas.vector) {
-    queriedCASinKnowledgeBase <- length(knowledge.base[names(knowledge.base) %in% cas.vector])
-    if (queriedCASinKnowledgeBase < length(cas.vector)) return(FALSE)
-    return(TRUE)
-}
-
-notification <- function(type, number=NA) {
-    switch (type,
-        "input.not.present" = showNotification("Input not present in the knowledge base", type="error"),
-        "input.already.present" = showNotification("Input already present in the knowledge base", type="warning"),
-        "not.cas" = showNotification("Input must contain CAS registry number(s)", type="error"),
-        "single.cas" = showNotification("Input must be a single CAS registry number", type="error"),
-        "too.many.cid" = showNotification(paste("Entry cannot be added: ", number,
-                                                " PubChem CIDs returned instead of one. Choose another method.",
-                                                sep=""),
-                                          type="error"),
-        "no.cid" = showNotification("Entry cannot be added: impossible to convert the input into PubChem CID", type="error"),
-        "success.one.addition" = showNotification("Succesfully added 1 CAS registry number", type="message"),
-        "success.n.removal" = showNotification(paste("Succesfully removed ", number, " CAS registry numbers(s)",
-                                                     sep=""),
-                                               type="message"),
-        "template.wrong.colnames" = showNotification("Input file has different column names than expected.", type="error"),
-        "success.template.edition" = showNotification(paste("Succesfully edited ", number, " entry(ies)", sep=""), type="message")
-    )
-}
-
-################################################################################
 # Save, reload, convert, and logs functions
 ################################################################################
 
@@ -222,13 +187,14 @@ save.knowledge.base <- function(kb, overwrite) {
     # Add a max number of previous knowledge bases?
     if (overwrite) {
         knowledge.base <- kb # This allows to save the changes in the kb
-        save(knowledge.base, file=rdata.file)
-        load(rdata.file, envir=.GlobalEnv)
+        saveRDS(knowledge.base, file=rds.file)
+        knowledge.base <<- readRDS(rds.file)
     } else {
-        kb.dir <- "previous_compound_knowledge_bases"
+        kb.dir <- "data/previous_compound_knowledge_bases"
         if (!dir.exists(kb.dir)) dir.create(kb.dir)
         time <- gsub(" ", "_", Sys.time())
-        save(knowledge.base, file=paste(kb.dir, "/", time, "_", rdata.file, sep=""))
+        kb.file <- strsplit(rds.file, split="/")[[1]][2]
+        saveRDS(knowledge.base, file=paste(kb.dir, "/", time, "_", kb.file, sep=""))
     }
 }
 
@@ -238,7 +204,7 @@ bash.append.from.bottom.to.top <- function(message, file) {
 }
 
 knowledge.base.commit.logs <- function(message1=NA, message2=NA) {
-    logfile <- "knowledge_base_commit.log"
+    logfile <- "data/knowledge_base_commit.log"
     if (!file.exists(logfile)) {
         system(paste("echo ", Sys.time(), " > ", logfile, sep=""))
         system(paste("echo 'Compound knowledge base first version' >> ", logfile, sep=""))

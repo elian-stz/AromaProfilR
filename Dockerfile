@@ -13,10 +13,12 @@ RUN rm -rf /srv/shiny-server/* \
 
 WORKDIR /srv/shiny-server/
 
-COPY ./app/*.R ./.Renviron ./
+COPY ./app/* .Renviron/ ./
 
-RUN mkdir ./login_db
+#RUN mkdir ./login_db
 
-RUN chown -R shiny:shiny ./login_db
+#RUN chown -R shiny:shiny ./login_db
 
-USER shiny
+#USER shiny
+
+USER root

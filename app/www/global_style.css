@@ -1,0 +1,14 @@
+#shiny-notification-panel {
+	position: fixed;
+	top: 0px;
+	right: 0px;
+	background-color: #00000000;
+	padding: 2px;
+	width: 300px;
+	max-width: 100%;
+	z-index: 999999;
+}
+
+hr {
+	border-top: 0.5px solid #636363;
+}

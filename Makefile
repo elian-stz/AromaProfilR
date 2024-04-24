@@ -15,7 +15,7 @@ db-init:
 	$(EXEC) Rscript create_login_db.R
 
 db-rm:
-	$(EXEC) rm login_db/login_db.sqlite
+	$(EXEC) rm data/login_db.sqlite
 
 install:
 	$(DC) pull --ignore-pull-failures
