@@ -14,12 +14,11 @@ rds.file <- "data/compound_knowledge_base.rds"
 knowledge.base <- readRDS(rds.file)
 
 # Sourcing----------------------------------------------------------------------
-file.sources <- setdiff(list.files(), list.dirs(recursive=FALSE, full.names=FALSE))
-file.sources <- grep("*.R", file.sources, value=TRUE)
-file.sources <- file.sources[!(file.sources %in% c("app.R", "global.R", "create_login_db.R"))]
+file.sources <- list.files()
+file.sources <- grep("^(fct|mod)", file.sources, value=TRUE)
 sapply(file.sources, source)
 
-# Package loading---------------------------------------------------------------
+# Loading packages--------------------------------------------------------------
 require(shiny)
 require(shinymanager)
 

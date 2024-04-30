@@ -1,14 +1,31 @@
 # Check whether the CAS numbers follow the below regex
-isCAS <- function(cas.vector) {
-    return(all(grepl(cas.vector, pattern="^\\d{2,7}-\\d{2}-\\d$")))
+isCAS <- function(CAS) {
+    CAS <- removePrefix(CAS)
+    return(grepl("^\\d{2,7}-\\d{2}-\\d$", CAS))
 }
 
 # Check whether the CAS numbers are present in the knowledge base
-# Does not append the prefix CAS_
-isInKnowledgeBase <- function(cas.vector) {
-    queriedCASinKnowledgeBase <- length(knowledge.base[names(knowledge.base) %in% cas.vector])
-    if (queriedCASinKnowledgeBase < length(cas.vector)) return(FALSE)
+isInKnowledgeBase <- function(CAS) {
+    if (!grepl("^CAS_", CAS)) CAS <- addPrefix(CAS) 
+    if (is.null(knowledge.base[[CAS]])) return(FALSE)
     return(TRUE)
+}
+
+getChemicalFamilies <- function() {
+    families <- sapply(knowledge.base, function(x) x$family)
+    families <- unlist(unname(families))
+    families <- sort(unique(families))
+    return(families)
+}
+
+addPrefix <- function(CAS) {
+    if (all(!grepl("^CAS_", CAS))) CAS <- paste("CAS_", CAS, sep="")
+    return(CAS)
+}
+
+removePrefix <- function(CAS) {
+    if (all(grepl("^CAS_", CAS))) CAS <- gsub("CAS_", "", CAS)
+    return(CAS)
 }
 
 notification <- function(type, number=NA) {
@@ -31,13 +48,15 @@ notification <- function(type, number=NA) {
                 ),
             "too.many.cid" = shiny::showNotification(
                 paste("Entry cannot be added: ", number,
-                      " PubChem CID(s) returned instead of one. Choose the template method.",
+                      " PubChem CIDs returned instead of one. Choose the template method.",
                       sep=""),
-                type="error"
+                type="error",
+                duration=NULL
                 ),
             "no.cid" = shiny::showNotification(
                 "Entry cannot be added: impossible to convert the input into PubChem CID",
-                type="error"
+                type="error",
+                duration=NULL
                 ),
             "success.one.addition" = shiny::showNotification(
                 "Succesfully added 1 CAS registry number",

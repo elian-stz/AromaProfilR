@@ -30,7 +30,7 @@ main <- function() {
 		cat("Do you really want to overwrite the database? (y/n)\n")
 		choice <- readLines("stdin", 1)
 		choice <- tolower(choice)
-		if (choice == "y" | choice == "yes") createSQLiteDB()
+		if (choice == "y" || choice == "yes") createSQLiteDB()
 	}
 }
 

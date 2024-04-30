@@ -8,7 +8,7 @@ ui <- fluidPage(
                tabPanel(title="Edit knowledge base",
                         sidebarLayout(
                             sidebarPanel(
-                                generateTemplateUI("generateTemplate"),
+                                generateTemplateUI("getTemplate"),
                                 submitTemplateUI("submitTemplate"),
                                 addSingleCASNumberUI("addCAS"),
                                 removeCASNumbersUI("removeCAS"),
@@ -56,7 +56,7 @@ server <- function(input, output, session) {
     # "Data" tab----------------------------------------------------------------
     
     # "Edit knowledge base" tab-------------------------------------------------
-    generateTemplateServer("generateTemplate")
+    generateTemplateServer("getTemplate")
     submitTemplateServer("submitTemplate")
     addSingleCASNumberServer("addCAS")
     removeCASNumbersServer("removeCAS")

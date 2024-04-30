@@ -1,33 +1,30 @@
-source("fct_PubChem_API.R")
-source("fct_utils.R")
-
 remove.cas.numbers <- function(text.field) {
-    cas.numbers <- unlist(strsplit(text.field, split=" "))
-    if (isCAS(cas.numbers)) {
-        cas.numbers <- unique(cas.numbers)
-        cas.numbers.prefix <- paste("CAS_", cas.numbers, sep="")
-        if (isInKnowledgeBase(cas.numbers.prefix)) {
+    CASvector <- strsplit(text.field, split=" ")[[1]]
+    CASvector <- unique(CASvector)
+    if (all(sapply(CASvector, isCAS))) {
+        CASprefix <- addPrefix(CASvector) 
+        if (all(sapply(CASprefix, isInKnowledgeBase))) {
             save.knowledge.base(knowledge.base, overwrite=FALSE)
-            knowledge.base <- knowledge.base[!(names(knowledge.base) %in% cas.numbers.prefix)]
+            knowledge.base <- knowledge.base[!(names(knowledge.base) %in% CASprefix)]
             save.knowledge.base(knowledge.base, overwrite=TRUE)
-            message <- paste("Removed ", length(cas.numbers), " CAS registry number(s): ",
-                             paste(cas.numbers, collapse=", "),
+            message <- paste("Removed ", length(CASvector), " CAS registry number(s): ",
+                             paste(CASvector, collapse=", "),
                              sep=""
                              )
             knowledge.base.commit.logs(message)
-            notification("success.n.removal", length(cas.numbers))
+            notification("success.n.removal", length(CASvector))
         } else notification("input.not.present")
     } else notification("not.cas")
 }
 
-add.single.cas.number <- function(text.field) {
+add.single.cas.number <- function(text.field, chemicalFamily) {
     if (isCAS(text.field)) {
-        cas.prefix <- paste("CAS_", text.field, sep="")
+        cas.prefix <- addPrefix(text.field)
         if (!isInKnowledgeBase(cas.prefix)) {
             cid <- cas2cid(text.field) # 2 NCBI queries
             if (!is.na(cid) && length(cid) == 1) {
                 save.knowledge.base(knowledge.base, overwrite=FALSE)
-                knowledge.base[[cas.prefix]] <- get.entry.info(cid, text.field)
+                knowledge.base[[cas.prefix]] <- get.entry.info(cid, text.field, chemicalFamily)
                 save.knowledge.base(knowledge.base, overwrite=TRUE)
                 message <- paste("Added 1 CAS registry number: ", text.field, sep="")
                 knowledge.base.commit.logs(message)
@@ -40,7 +37,7 @@ add.single.cas.number <- function(text.field) {
     } else notification("single.cas")
 }
 
-get.entry.info <- function(cid, cas) {
+get.entry.info <- function(cid, cas, chemicalFamily) {
     properties <- getPropertiesFromCID(cid)
     smiles <- properties$CanonicalSMILES
     
@@ -65,7 +62,8 @@ get.entry.info <- function(cid, cas) {
         "odor_pubchem" = odor_pubchem,
         "taste_pubchem" = taste_pubchem,
         "odor_goodscents" = getGoodScentsOdorDescriptors(cas),
-        "odor_flavornet" = getFlavornetOdorDescriptors(cid)
+        "odor_flavornet" = getFlavornetOdorDescriptors(cid),
+        "family" = chemicalFamily
     )
     return(entry)
 }
@@ -75,9 +73,9 @@ generate.prefilled.template <- function(text.field) {
     if (tolower(text.field) == "all") return(knowledge.base.to.dataframe(knowledge.base))
     
     cas.numbers <- unlist(strsplit(text.field, split=" "))
-    if (isCAS(cas.numbers)) {
+    if (all(sapply(cas.numbers, isCAS))) {
         cas.numbers <- unique(cas.numbers)
-        cas.prefix <- paste("CAS_", cas.numbers, sep="")
+        cas.prefix <- addPrefix(cas.numbers)
         query <- knowledge.base[names(knowledge.base) %in% cas.prefix]
         if (length(query) < 1) return(empty.template())
         query <- knowledge.base.to.dataframe(query)
@@ -111,7 +109,7 @@ edit.with.template <- function(df) {
         for (row in 1:nrow(df)) {
             cas <- df[row, "CAS"]
             if (isCAS(cas)) {
-                cas.prefix <- paste("CAS_", cas, sep="")
+                cas.prefix <- addPrefix(cas) 
                 if (isInKnowledgeBase(cas.prefix)) {
                     edited.entry <- template.to.entry(df[row, ], "edit.existing")
                     edited.entry.list[[cas.prefix]] <- edited.entry
@@ -121,62 +119,79 @@ edit.with.template <- function(df) {
                 }
             }
         }
-        all.entries <- list(new.entry.list, edited.entry.list)
         save.knowledge.base(knowledge.base, overwrite=FALSE)
-        for (i in 1:length(all.entries)) {
-            knowledge.base[names(all.entries[[i]])] <- all.entries[[i]]
+        if (length(new.entry.list) != 0) {
+            for (i in 1:length(new.entry.list)) {
+                name <- names(new.entry.list[i])
+                knowledge.base[[name]] <- new.entry.list[[i]]
+            }
+        }
+        if (length(edit.with.template) != 0) {
+            for (i in 1:length(edited.entry.list)) {
+                name <- names(edited.entry.list[i])
+                knowledge.base[[name]] <- edited.entry.list[[i]]
+            }
         }
         save.knowledge.base(knowledge.base, overwrite=TRUE)
         message1 <- paste("Edited ", length(edited.entry.list), " existing entry(ies): ",
-                         paste(gsub("CAS_", "", names(edited.entry.list)), collapse=", "),
+                         paste(removePrefix(names(edited.entry.list)), collapse=", "),
                          sep=""
         )
         message2 <- paste("Added ", length(new.entry.list), " new entry(ies): ",
-                          paste(gsub("CAS_", "", names(new.entry.list)), collapse=", "),
+                          paste(removePrefix(names(new.entry.list)), collapse=", "),
                           sep=""
         )
         knowledge.base.commit.logs(message1, message2)
-        notification("success.template.edition", length(all.entries))
+        notification("success.template.edition", length(new.entry.list) + length(edited.entry.list))
     } else notification("template.wrong.colnames")
 }
 
 template.to.entry <- function(df, type=c("edit.existing", "add")) {
-    # Identify each type of column:
+    # Identify each column column type
     ## CID is integer
-    ## LRIs, molecular weight, and XLogP are double
+    ## LRI_polar and LRI_nonpolar are vector of doubles
+    ## molecular_weight_g.mol-1 and XLogP are double
     ## Rest is characters
-    header <- colnames(empty.template())
-    vector.like.col <- c("LRI_polar", "LRI_nonpolar")
-    col <- header[!(header %in% vector.like.col)]
-    
-    # Check decimal separators and type of numeric variables
-    df$CID <- as.integer(df$CID)
-    for (attribute in c(vector.like.col, "XLogP", "molecular_weight_g.mol-1")) {
-            if (is.character(df[attribute])) {
-                df[attribute] <- gsub(",", ".", df[attribute])
-        }
-    }
-    df$XLogP <- as.double(df$XLogP)
-    df$`molecular_weight_g.mol-1` <- as.double(df$`molecular_weight_g.mol-1`)
+    header    <- colnames(empty.template())
+    LRICol    <- c("LRI_polar", "LRI_nonpolar")
+    doubleCol <- c("molecular_weight_g.mol-1", "XLogP")
+    intCol    <- c("CID")
+    col       <- header[!(header %in% c(LRICol, doubleCol, intCol))]
     
     flag <- "keep.previous" # flag to keep the previous value
     entry <- list()
-    cas.prefix <- paste("CAS_", df[1, "CAS"], sep="")
     
     # Assign each cell of the template to the entry object
     for (attribute in header) {
         cell <- df[1, attribute]
-        if (type == "edit.existing" && (tolower(cell) == flag || is.na(cell))) {
+        if ((is.na(cell) || tolower(cell) == flag) && type == "edit.existing") {
+            cas.prefix <- addPrefix(df[1, "CAS"])
             entry[[attribute]] <- knowledge.base[[cas.prefix]][[attribute]]
         } else {
             if (attribute %in% col) entry[[attribute]] <- cell
-            if (attribute %in% vector.like.col) {
-                values <- unlist(strsplit(cell, split=";"))
-                entry[[attribute]] <- as.double(values)
-            }
+            if (attribute %in% doubleCol) entry[[attribute]] <- convertType(cell, "double")
+            if (attribute %in% intCol) entry[[attribute]] <- convertType(cell, "int")
+            if (attribute %in% LRICol) entry[[attribute]] <- convertType(cell, "LRI")
         }
     }
     return(entry)
+}
+
+convertType <- function(cell, conversion=c("LRI", "double", "int")) {
+    if (!is.character(cell)) return(cell)
+  
+    if (conversion == "int") return(as.integer(cell))
+    if (conversion == "double") {
+        cell <- gsub(",", ".", cell)
+        return(as.double(cell))
+    }
+    if (conversion == "LRI") {
+        cell <- strsplit(cell, ";")[[1]]
+        cell <- gsub(",", ".", cell)
+        cell <- as.double(cell)
+        return(cell)
+    }
+    return(cell)
 }
 
 ################################################################################

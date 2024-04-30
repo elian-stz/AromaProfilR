@@ -6,7 +6,7 @@ generateTemplateUI <- function(id) {
         tags$ol(
             tags$li("Generate a pre-filled template TSV file"),
             textInput(
-                inputId=ns("template"),
+                inputId=ns("textField"),
                 label=HTML("Enter CAS registry number(s) separated by spaces, or type <code>all</code> or <code>empty</code>")
             ),
             downloadLink(
@@ -34,7 +34,7 @@ generateTemplateServer <- function(id) {
             output$download <- downloadHandler(
                 filename = function() paste(Sys.Date(), "_template.tsv", sep=""),
                 content = function(con) {
-                    df <- generate.prefilled.template(input$template)
+                    df <- generate.prefilled.template(input$textField)
                     write.table(df, file=con, sep="\t", row.names=FALSE, quote=FALSE)
                 }
             )
@@ -61,7 +61,7 @@ submitTemplateServer <- function(id) {
         function(input, output, session) {
             observeEvent(input$upload, {
                 if (tools::file_ext(input$upload$name) == "tsv") {
-                    df <- read.csv(input$upload.template$datapath, sep="\t", dec=".", na.strings=c("", "NA"))
+                    df <- read.csv(input$upload$datapath, sep="\t", dec=".", na.strings=c("", "NA"))
                     colnames(df)[colnames(df) == "molecular_weight_g.mol.1"] <- "molecular_weight_g.mol-1"
                     edit.with.template(df)
                 } else notification("invalid.file")
@@ -71,14 +71,18 @@ submitTemplateServer <- function(id) {
 }
 
 # Add entry --------------------------------------------------------------------
-
 addSingleCASNumberUI <- function(id) {
     ns <- NS(id)
     tagList(
         tags$h2("Add an entry"),
         textInput(
-            inputId=ns("add"),
+            inputId=ns("textField"),
             label="Enter a single CAS registry number"
+        ),
+        selectInput(
+            inputId=ns("choice"),
+            label="Select a chemical family",
+            choices=c("", "Unknown", getChemicalFamilies()),
         ),
         actionButton(
             inputId=ns("submit"),
@@ -93,10 +97,10 @@ addSingleCASNumberServer <- function(id) {
         id,
         function(input, output, session) {
             observeEvent(input$submit, {
-                if (input$add.cas != "") {
+                if (input$textField != "" && input$choice != "") {
                     shinyjs::disable("submit")
                     #tags$style(HTML(".container-fluid {cursor: wait;}"))
-                    add.single.cas.number(input$add.cas)
+                    add.single.cas.number(input$textField, input$choice)
                     shinyjs::enable("submit")
                     #tags$style(HTML(".container-fluid {cursor: default;}"))
                 }
@@ -106,13 +110,12 @@ addSingleCASNumberServer <- function(id) {
 }
 
 # Remove CAS Numbers -----------------------------------------------------------
-
 removeCASNumbersUI <- function(id) {
     ns <- NS(id)
     tagList(
         tags$h2("Delete entries"),
         textInput(
-            inputId=ns("CASVector"),
+            inputId=ns("textField"),
             label="Enter CAS registry number(s) separated by spaces"
         ),
         actionButton(
@@ -127,14 +130,13 @@ removeCASNumbersServer <- function(id) {
         id,
         function(input, output, session) {
             observeEvent(input$submit, {
-                if (input$CASVector != "") remove.cas.numbers(input$CASVector)
+                if (input$textField != "") remove.cas.numbers(input$textField)
             })
         }
     )
 }
 
 # Main Panel -------------------------------------------------------------------
-
 showLogsUI <- function(id) {
     ns <- NS(id)
     tagList(
