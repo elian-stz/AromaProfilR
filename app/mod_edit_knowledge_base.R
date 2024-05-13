@@ -28,9 +28,7 @@ generateTemplateUI <- function(id) {
 }
 
 generateTemplateServer <- function(id) {
-    moduleServer(
-        id,
-        function(input, output, session) {
+    moduleServer(id, function(input, output, session) {
             output$download <- downloadHandler(
                 filename = function() paste(Sys.Date(), "_template.tsv", sep=""),
                 content = function(con) {
@@ -38,8 +36,7 @@ generateTemplateServer <- function(id) {
                     write.table(df, file=con, sep="\t", row.names=FALSE, quote=FALSE)
                 }
             )
-        }
-    )
+    })
 }
 
 # Submit template --------------------------------------------------------------
@@ -56,18 +53,15 @@ submitTemplateUI <- function(id) {
 }
 
 submitTemplateServer <- function(id) {
-    moduleServer(
-        id,
-        function(input, output, session) {
+    moduleServer(id, function(input, output, session) {
             observeEvent(input$upload, {
                 if (tools::file_ext(input$upload$name) == "tsv") {
-                    df <- read.csv(input$upload$datapath, sep="\t", dec=".", na.strings=c("", "NA"))
+                    df <- read.csv(input$upload$datapath, sep="\t", na.strings=c("", "NA"))
                     colnames(df)[colnames(df) == "molecular_weight_g.mol.1"] <- "molecular_weight_g.mol-1"
                     edit.with.template(df)
                 } else notification("invalid.file")
             })
-        }
-    )
+    })
 }
 
 # Add entry --------------------------------------------------------------------
@@ -93,9 +87,7 @@ addSingleCASNumberUI <- function(id) {
 }
 
 addSingleCASNumberServer <- function(id) {
-    moduleServer(
-        id,
-        function(input, output, session) {
+    moduleServer(id, function(input, output, session) {
             observeEvent(input$submit, {
                 if (input$textField != "" && input$choice != "") {
                     shinyjs::disable("submit")
@@ -105,8 +97,7 @@ addSingleCASNumberServer <- function(id) {
                     #tags$style(HTML(".container-fluid {cursor: default;}"))
                 }
             })
-        }
-    )
+    })
 }
 
 # Remove CAS Numbers -----------------------------------------------------------
@@ -126,14 +117,11 @@ removeCASNumbersUI <- function(id) {
 }
 
 removeCASNumbersServer <- function(id) {
-    moduleServer(
-        id,
-        function(input, output, session) {
+    moduleServer(id, function(input, output, session) {
             observeEvent(input$submit, {
                 if (input$textField != "") remove.cas.numbers(input$textField)
             })
-        }
-    )
+    })
 }
 
 # Main Panel -------------------------------------------------------------------
@@ -151,9 +139,7 @@ showLogsUI <- function(id) {
 }
 
 showLogsServer <- function(id) {
-    moduleServer(
-        id,
-        function(input, output, session) {
+    moduleServer(id, function(input, output, session) {
             output$baseSize <- renderText({
                 invalidateLater(2000, session)
                 paste("Number of compounds in the knowledge base: ", length(knowledge.base), sep="")
@@ -164,6 +150,5 @@ showLogsServer <- function(id) {
                 file_content <- readLines("data/knowledge_base_commit.log")
                 paste(file_content, collapse="\n")
             })
-        }
-    )
+    })
 }

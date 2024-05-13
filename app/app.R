@@ -4,7 +4,16 @@ ui <- fluidPage(
     includeCSS("www/global_style.css"),
     
     navbarPage(title="title", id="main", windowTitle="windowTitle",
-               tabPanel(title="Data", h1("Test tab")),
+               tabPanel(title="Upload data",
+                        sidebarLayout(
+                            sidebarPanel(
+                                uploadInputFileUI("input")
+                            ),
+                            mainPanel(
+                                displayPlotUI("test")
+                            )
+                        )
+               ),
                tabPanel(title="Edit knowledge base",
                         sidebarLayout(
                             sidebarPanel(
@@ -53,7 +62,9 @@ server <- function(input, output, session) {
         }
     })
     
-    # "Data" tab----------------------------------------------------------------
+    # "Upload data" tab---------------------------------------------------------
+    dataSplit <- uploadInputFileServer("input")
+    displayPlotServer("test", dataSplit)
     
     # "Edit knowledge base" tab-------------------------------------------------
     generateTemplateServer("getTemplate")

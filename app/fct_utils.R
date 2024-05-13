@@ -6,7 +6,7 @@ isCAS <- function(CAS) {
 
 # Check whether the CAS numbers are present in the knowledge base
 isInKnowledgeBase <- function(CAS) {
-    if (!grepl("^CAS_", CAS)) CAS <- addPrefix(CAS) 
+    CAS <- addPrefix(CAS) 
     if (is.null(knowledge.base[[CAS]])) return(FALSE)
     return(TRUE)
 }
@@ -28,7 +28,7 @@ removePrefix <- function(CAS) {
     return(CAS)
 }
 
-notification <- function(type, number=NA) {
+notification <- function(type, info=NA) {
     switch(type,
             "input.not.present" = shiny::showNotification(
                 "Input not present in the knowledge base",
@@ -47,7 +47,7 @@ notification <- function(type, number=NA) {
                 type="error"
                 ),
             "too.many.cid" = shiny::showNotification(
-                paste("Entry cannot be added: ", number,
+                paste("Entry cannot be added: ", info,
                       " PubChem CIDs returned instead of one. Choose the template method.",
                       sep=""),
                 type="error",
@@ -63,7 +63,7 @@ notification <- function(type, number=NA) {
                 type="message"
                 ),
             "success.n.removal" = shiny::showNotification(
-                paste("Succesfully removed ", number, " CAS registry numbers(s)",
+                paste("Succesfully removed ", info, " CAS registry numbers(s)",
                       sep=""),
                 type="message"
                 ),
@@ -72,13 +72,24 @@ notification <- function(type, number=NA) {
                 type="error"
                 ),
             "success.template.edition" = shiny::showNotification(
-                paste("Succesfully edited ", number, " entry(ies)",
+                paste("Succesfully edited ", info, " entry(ies)",
                       sep=""),
                 type="message"
                 ),
             "invalid.file" = shiny::showNotification(
                 "Invalid file. Please upload a .tsv file",
                 type="error"
-                )
+                ),
+           "missing.columns" = shiny::showNotification(
+               paste("Error while uploading data. Missing columns: ", info,
+                     sep=""),
+               type="error",
+               duration=30
+               ),
+           "wrong.column.type" = shiny::showNotification(
+               "Error while uploading data. Wrong data types",
+               type="error",
+               duration=30
+               )
            )
 }

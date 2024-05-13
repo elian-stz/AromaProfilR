@@ -1,5 +1,6 @@
-remove.cas.numbers <- function(text.field) {
-    CASvector <- strsplit(text.field, split=" ")[[1]]
+# CAS deletion feature----------------------------------------------------------
+remove.cas.numbers <- function(CAS) {
+    CASvector <- strsplit(CAS, split=" ")[[1]]
     CASvector <- unique(CASvector)
     if (all(sapply(CASvector, isCAS))) {
         CASprefix <- addPrefix(CASvector) 
@@ -17,16 +18,17 @@ remove.cas.numbers <- function(text.field) {
     } else notification("not.cas")
 }
 
-add.single.cas.number <- function(text.field, chemicalFamily) {
-    if (isCAS(text.field)) {
-        cas.prefix <- addPrefix(text.field)
+# CAS addition feature----------------------------------------------------------
+add.single.cas.number <- function(CAS, chemicalFamily) {
+    if (isCAS(CAS)) {
+        cas.prefix <- addPrefix(CAS)
         if (!isInKnowledgeBase(cas.prefix)) {
-            cid <- cas2cid(text.field) # 2 NCBI queries
-            if (!is.na(cid) && length(cid) == 1) {
+            cid <- cas2cid(CAS) # 2 NCBI queries
+            if (length(cid) == 1 && !is.na(cid)) {
                 save.knowledge.base(knowledge.base, overwrite=FALSE)
-                knowledge.base[[cas.prefix]] <- get.entry.info(cid, text.field, chemicalFamily)
+                knowledge.base[[cas.prefix]] <- get.entry.info(cid, CAS, chemicalFamily)
                 save.knowledge.base(knowledge.base, overwrite=TRUE)
-                message <- paste("Added 1 CAS registry number: ", text.field, sep="")
+                message <- paste("Added 1 CAS registry number: ", CAS, sep="")
                 knowledge.base.commit.logs(message)
                 notification("success.one.addition")
             } else {
@@ -68,6 +70,7 @@ get.entry.info <- function(cid, cas, chemicalFamily) {
     return(entry)
 }
 
+# Template generation feature---------------------------------------------------
 generate.prefilled.template <- function(text.field) {
     if (tolower(text.field) == "empty" || text.field == "") return(empty.template())
     if (tolower(text.field) == "all") return(knowledge.base.to.dataframe(knowledge.base))
@@ -92,8 +95,8 @@ empty.template <- function() {
     return(df)
 }
 
+# Knowledge base edition with template feature----------------------------------
 # TODO what to display on the template file: the previous info or the flag
-# TODO type of non-str values
 # TODO checking separators for vector-like structures
 
 edit.with.template <- function(df) {
@@ -194,11 +197,8 @@ convertType <- function(cell, conversion=c("LRI", "double", "int")) {
     return(cell)
 }
 
-################################################################################
-# Save, reload, convert, and logs functions
-################################################################################
-
-save.knowledge.base <- function(kb, overwrite) {
+# Knowledge base saving feature-------------------------------------------------
+save.knowledge.base <- function(kb, overwrite=FALSE) {
     # Add a max number of previous knowledge bases?
     if (overwrite) {
         knowledge.base <- kb # This allows to save the changes in the kb
@@ -213,6 +213,7 @@ save.knowledge.base <- function(kb, overwrite) {
     }
 }
 
+# Log file management feature---------------------------------------------------
 bash.append.from.bottom.to.top <- function(message, file) {
     # append message from bottom to top of a file
     return(paste("echo '", message, "' | cat - ", file, " > temp && mv temp ", file, sep=""))
@@ -233,6 +234,7 @@ knowledge.base.commit.logs <- function(message1=NA, message2=NA) {
     }
 }
 
+# Knowledge base conversion feature---------------------------------------------
 convert_to_string <- function(list_vec) {
     # Convert each vector to a string and concatenate with ";"
     str <- paste(unlist(list_vec), collapse = ";")
