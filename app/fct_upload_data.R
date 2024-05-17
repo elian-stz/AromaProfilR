@@ -5,7 +5,8 @@ getMinimalHeader <- function() {
              "CAS.",           # chr
              #"Component.Height", #double
              "Component.RI",   # double 
-             "File.Name"       # chr
+             "File.Name",      # chr
+             "Info"            # chr
              )
     )
 }
@@ -86,6 +87,29 @@ splitAnalysableTag <- function(df, cutoff=30) {
     })
     df$tag <- unlist(df$tag)
     return(split(df, df$tag))
+}
+
+identifyConditionsAndReplicates <- function(df) {
+    samples <- sort(unique(test$File.Name)) #Info
+    split <- strsplit(samples, "_")
+    names(split) <- samples
+    return(split)
+}
+
+attributeConditionAndReplicate <- function(list) {
+    condition <- 1
+    replicate <- 1
+    identified <- list()
+    sampleNbr <- length(list)
+    for (i in 1:sampleNbr) {
+        identified[[names(list[i])]] <- c(condition, replicate)
+        replicate <- replicate + 1
+        if ((i + 1) < sampleNbr && list[[i]][1] != list[[i + 1]][1]) {
+            condition <- condition + 1
+            replicate <- 1
+        }
+    }
+    return(identified)
 }
 
 getSplitInputFile <- function(df, column=c("Polar", "Non-polar"), mode=c("Median", "Mean"), cutoff=30) {
