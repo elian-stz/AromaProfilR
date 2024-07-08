@@ -2,12 +2,12 @@
 uploadInputFileUI <- function(id) {
     ns <- NS(id)
     tagList(
-        selectInput(
+        radioButtons(
             inputId=ns("columnType"),
             label="Select a column type",
-            choices=c("Polar", "Non-polar"),
+            choices=c("Polar", "Non-polar")
         ),
-        selectInput(
+        radioButtons(
             inputId=ns("method"),
             label="Select a LRI difference method",
             choices=c("Median", "Mean")

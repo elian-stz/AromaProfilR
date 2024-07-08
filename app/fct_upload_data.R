@@ -1,12 +1,11 @@
 getMinimalHeader <- function() {
     return(c("Component.RT",   # double
-             "Component.Area", # double
              "Match.Factor",   # double
              "CAS.",           # chr
-             #"Component.Height", #double
              "Component.RI",   # double 
-             "File.Name",      # chr
-             "Info"            # chr
+             "File.Name"      # chr
+             #"Component.Area", # double
+             #"Component.Height", #double
              )
     )
 }
@@ -123,7 +122,7 @@ getSplitInputFile <- function(df, column=c("Polar", "Non-polar"), mode=c("Median
         analysee <- splitAnalysableTag(analysee, cutoff)
         return(list(
             "retained" = analysee[["retained"]],
-            "not retained" = analysee[["not retained"]],
+            "notRetained" = analysee[["not retained"]],
             "noLRI" = firstSplit[["noLRI"]],
             "unknown" = firstSplit[["unknown"]]
             )

@@ -4,7 +4,7 @@ ui <- fluidPage(
     includeCSS("www/global_style.css"),
     
     navbarPage(title="title", id="main", windowTitle="windowTitle",
-               tabPanel(title="Upload data",
+               tabPanel(title="Input",
                         sidebarLayout(
                             sidebarPanel(
                                 uploadInputFileUI("input")
@@ -13,6 +13,12 @@ ui <- fluidPage(
                                 displayPlotUI("test")
                             )
                         )
+               ),
+               tabPanel(title="Output",
+                        importExcelFileUI("ExcelOuput")
+               ),
+               tabPanel(title="Unknown compound register",
+                        displayRegisterUI("register")
                ),
                tabPanel(title="Edit knowledge base",
                         sidebarLayout(
@@ -46,8 +52,7 @@ ui <- secure_app(ui, enable_admin = TRUE,
 )
 
 server <- function(input, output, session) {
-    # call the server part
-    # check_credentials returns a function to authenticate users
+    # Check credentials (authentication)
     res_auth <- secure_server(
         check_credentials = check_credentials(
             db = "./data/login_db.sqlite",
@@ -65,6 +70,12 @@ server <- function(input, output, session) {
     # "Upload data" tab---------------------------------------------------------
     dataSplit <- uploadInputFileServer("input")
     displayPlotServer("test", dataSplit)
+    
+    # "Output" tab--------------------------------------------------------------
+    importExcelFileServer("ExcelOuput", dataSplit)
+    
+    # "Unknown compound register" tab-------------------------------------------
+    displayRegisterServer("register", dataSplit)
     
     # "Edit knowledge base" tab-------------------------------------------------
     generateTemplateServer("getTemplate")

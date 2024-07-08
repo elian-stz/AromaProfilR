@@ -9,15 +9,11 @@ RUN rm -rf /srv/shiny-server/* \
 		libxml2 \
 		libmagick++-dev \
 		vim \
-	&& R -e "install.packages(c('shinymanager', 'webchem', 'PubChemR'))"
+	&& R -e "install.packages(c('shinymanager', 'webchem', 'PubChemR', 'openxlsx'))"
 
 WORKDIR /srv/shiny-server/
 
-COPY ./app/* .Renviron/ ./
-
-#RUN mkdir ./login_db
-
-#RUN chown -R shiny:shiny ./login_db
+COPY app/. ./
 
 #USER shiny
 

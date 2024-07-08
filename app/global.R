@@ -1,6 +1,7 @@
-# Port options------------------------------------------------------------------
+# Options-----------------------------------------------------------------------
 #options(shiny.host = "127.0.0.1")
 options(shiny.port = 3838)
+options(shiny.maxRequestSize = 30*1024^2)
 
 # Global variables--------------------------------------------------------------
 # Environment variables
@@ -9,8 +10,8 @@ admin1.mail <- Sys.getenv("ADMIN1_MAIL")
 admin2.mail <- Sys.getenv("ADMIN2_MAIL")
 admin3.mail <- Sys.getenv("ADMIN3_MAIL")
 
-# Knowledge base containing compound info
-rds.file <- "data/compound_knowledge_base.rds"
+# Knowledge base
+rds.file <- "./data/compound_knowledge_base.rds"
 knowledge.base <- readRDS(rds.file)
 
 # Sourcing----------------------------------------------------------------------

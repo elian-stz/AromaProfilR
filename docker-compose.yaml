@@ -6,10 +6,10 @@ services:
     ports:
       - '3838:3838'
     volumes:
-      - app_db:/srv/shiny-server/data
+      - app_data:/srv/shiny-server/data/
     env_file:
       - .Renviron
 
 volumes:
-  app_db:
+  app_data:
     driver: local
