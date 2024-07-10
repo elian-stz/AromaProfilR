@@ -1,15 +1,32 @@
+#' Return the minimal header of the input CSV file from MassHunter.
+#' 
+#' Get the minimal header of the CSV file from MassHunter. It must contain at 
+#' least 5 columns: `CAS.` (`CAS#`), `Compound.Name` (`Compound Name`),
+#' `Match.Factor` (`Match Factor`), `Component.RI` (`Component RI`),
+#' and `File.Name` (`File Name`). The name between parentheses are the names
+#' obtained directly from MassHunter, whereas those that are not are the names
+#' that get automatically converted by R.
+#' @return vector containing the minimal header of the input CSV file
 getMinimalHeader <- function() {
-    return(c("Component.RT",   # double
-             "Match.Factor",   # double
-             "CAS.",           # chr
-             "Component.RI",   # double 
-             "File.Name"      # chr
-             #"Component.Area", # double
-             #"Component.Height", #double
-             )
-    )
+    return(c("CAS.",           # chr   : CAS registry number
+             "Compound.Name",  # chr   : common name
+             "Match.Factor",   # double: match factor calculated by MassHunter
+             "Component.RI",   # double: experimental LRI
+             "File.Name"       # chr   : sample name
+             #"Component.RT", "Component.Area", "Component.Height"
+    ))
 }
 
+#' Check the integrity of the input CSV file's header.
+#' 
+#' Check whether the header of the input CSV file from MassHunter contains
+#' the minimal header: `CAS.`, `Compound.Name`, `Match.Factor`, `Component.RI`,
+#' and `File.Name`. Display a notification if it does not match.
+#' @param header header of the input CSV file from MassHunter
+#' @return logical
+#' @examples
+#' checkFileHeader("CAS.", "Compound.Name", "Match.Factor", "Component.RI", "File.Name")
+#' checkFileHeader("CAS.", "Compound.Name", "Match.Factor")
 checkFileHeader <- function(header) {
     expectedMinimalHeader <- getMinimalHeader()
     differentCol <- setdiff(expectedMinimalHeader, header)
@@ -18,9 +35,18 @@ checkFileHeader <- function(header) {
     return(FALSE)
 }
 
+#' Check the column types of the input dataframe. 
+#' 
+#' Check whether the content of the input CSV file from MassHunter contains
+#' the right types (without converting first). `CAS.` and `File.Name` are 
+#' characters, while the rest is double.
+#' @param df dataframe as the input from MassHunter 
+#' @return logical
+#' @examples
+#' checkFileColumnType(myDataframe)
 checkFileColumnType <- function(df) {
    header <- getMinimalHeader()
-   chrCol <- c("CAS.", "File.Name")
+   chrCol <- c("CAS.", "File.Name", "Compound.Name")
    doubleCol <- header[!(header %in% chrCol)]
    for (i in header) {
        if (i %in% chrCol && !is.character(df[[i]])) return(FALSE)
@@ -29,6 +55,14 @@ checkFileColumnType <- function(df) {
    return(TRUE)
 }
 
+#' Check the integrity of the input dataframe from MassHunter.
+#' 
+#' Check the integrity of the dataframe by checking the minimal header and
+#' column types.
+#' @param df dataframe as the input from MassHunter 
+#' @return logical
+#' @examples
+#' checkFileIntegrity(myDataframe)
 checkFileIntegrity <- function(df) {
     if (!checkFileHeader(colnames(df))) return(FALSE) # notif in the function
     if (!checkFileColumnType(df)) {
@@ -71,11 +105,17 @@ addLRIDifferenceColumn <- function(df, type=c("LRI_polar", "LRI_nonpolar"), mode
     df$LRI.Difference <- lapply(1:nrow(df), function(i) {
         experimentalLRI <- df[i, "Component.RI"]
         CASprefix <- addPrefix(df[i, "CAS."])
-        if (mode == "Median") theoricalLRI <- median(knowledge.base[[CASprefix]][[type]])
-        if (mode == "Mean") theoricalLRI <- mean(knowledge.base[[CASprefix]][[type]])
-        return(abs(theoricalLRI - experimentalLRI))
+        if (mode == "Median") referenceLRI <- median(knowledge.base[[CASprefix]][[type]])
+        if (mode == "Mean") referenceLRI <- mean(knowledge.base[[CASprefix]][[type]])
+        return(abs(referenceLRI - experimentalLRI))
     })
     df$LRI.Difference <- unlist(df$LRI.Difference)
+    browser()
+    if (mode == "Median") {
+        df$Median.Reference.LRI <- median(knowledge.base[[addPrefix(df$CAS.)]][[type]])
+    } else {
+        df$Mean.Reference.LRI <- mean(knowledge.base[[addPrefix(df$CAS.)]][[type]])
+    }
     return(df)
 }
 
@@ -86,29 +126,6 @@ splitAnalysableTag <- function(df, cutoff=30) {
     })
     df$tag <- unlist(df$tag)
     return(split(df, df$tag))
-}
-
-identifyConditionsAndReplicates <- function(df) {
-    samples <- sort(unique(test$File.Name)) #Info
-    split <- strsplit(samples, "_")
-    names(split) <- samples
-    return(split)
-}
-
-attributeConditionAndReplicate <- function(list) {
-    condition <- 1
-    replicate <- 1
-    identified <- list()
-    sampleNbr <- length(list)
-    for (i in 1:sampleNbr) {
-        identified[[names(list[i])]] <- c(condition, replicate)
-        replicate <- replicate + 1
-        if ((i + 1) < sampleNbr && list[[i]][1] != list[[i + 1]][1]) {
-            condition <- condition + 1
-            replicate <- 1
-        }
-    }
-    return(identified)
 }
 
 getSplitInputFile <- function(df, column=c("Polar", "Non-polar"), mode=c("Median", "Mean"), cutoff=30) {

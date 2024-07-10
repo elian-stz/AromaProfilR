@@ -4,7 +4,7 @@ services:
   app:
     build: .
     ports:
-      - '3838:3838'
+      - '127.0.0.1:3838:3838'
     volumes:
       - app_data:/srv/shiny-server/data/
     env_file:

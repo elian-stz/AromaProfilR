@@ -44,6 +44,5 @@ updateUnknownCompoundsRegister <- function(df) {
     
     register <- removeCompoundsInKnowledgeBase(register)
     register$encounter_number <- as.integer(register$encounter_number)
-    register <- register[order(register$encounter_number, decreasing=TRUE), ]
     saveRDS(register, file=file)
 }

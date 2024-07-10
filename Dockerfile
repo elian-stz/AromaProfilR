@@ -13,8 +13,14 @@ RUN rm -rf /srv/shiny-server/* \
 
 WORKDIR /srv/shiny-server/
 
-COPY app/. ./
+RUN mkdir -p data && chown -R shiny:shiny data
 
-#USER shiny
+VOLUME /srv/shiny-server/data
 
-USER root
+COPY app/*.R ./
+
+COPY app/www/. ./www/
+
+COPY .Renviron ./
+
+USER shiny

@@ -16,8 +16,20 @@ createDataframeFromKnowledgeBase <- function(entries) {
     return(dfWithKnowledgeBaseInfo)
 }
 
+addDescriptorColumn <- function(df) {
+    df$Descriptor <- apply(df, 1, function(row) {
+        descriptor <- c(unname(row["odor_pubchem"]), unname(row["row$taste_pubchem"]))
+        descriptor <- append(descriptor, c(unname(row["odor_goodscents"]), unname(row["odor_flavornet"])))
+        descriptor[is.na(descriptor)] <- ""
+        if (sum(nchar(descriptor)) == 0) {
+            return(0)
+        } else return(1)
+    })
+    return(df)
+}
+
 addKnowledgeBaseInfo <- function(dataSplit) {
-    # Get all 
+    # Get all entries from classified data
     entries <- getUniqueEntries(dataSplit)
     entries <- addPrefix(entries)
     
@@ -25,7 +37,9 @@ addKnowledgeBaseInfo <- function(dataSplit) {
     
     # Join split input file
     dataSplit <- lapply(dataSplit, function(class) {
-        merge(x = class, y = dfWithKnowledgeBaseInfo, by = "CAS.", all.x = TRUE)
+        class <- merge(x = class, y = dfWithKnowledgeBaseInfo, by = "CAS.", all.x = TRUE)
+        class <- addDescriptorColumn(class)
+        return(class)
     })
     
     return(dataSplit)
