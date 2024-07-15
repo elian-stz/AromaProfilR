@@ -28,6 +28,12 @@ removePrefix <- function(CAS) {
     return(CAS)
 }
 
+getAllCASNumbersInKnowledgeBase <- function(prefix=FALSE) {
+    entries <- names(knowledge.base)
+    if (prefix) return(entries)
+    return(removePrefix(entries))
+}
+
 notification <- function(type, info=NA) {
     switch(type,
             "input.not.present" = shiny::showNotification(

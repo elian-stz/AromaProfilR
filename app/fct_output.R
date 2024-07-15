@@ -34,12 +34,11 @@ addKnowledgeBaseInfo <- function(dataSplit) {
     entries <- addPrefix(entries)
     
     dfWithKnowledgeBaseInfo <- createDataframeFromKnowledgeBase(entries)
+    dfWithKnowledgeBaseInfo <- addDescriptorColumn(dfWithKnowledgeBaseInfo)
     
     # Join split input file
-    dataSplit <- lapply(dataSplit, function(class) {
-        class <- merge(x = class, y = dfWithKnowledgeBaseInfo, by = "CAS.", all.x = TRUE)
-        class <- addDescriptorColumn(class)
-        return(class)
+    dataSplit <- lapply(dataSplit, function(group) {
+        merge(x = group, y = dfWithKnowledgeBaseInfo, by = "CAS.", all.x = TRUE)
     })
     
     return(dataSplit)

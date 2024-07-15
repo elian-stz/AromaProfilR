@@ -67,7 +67,7 @@ server <- function(input, output, session) {
         }
     })
     
-    # "Upload data" tab---------------------------------------------------------
+    # "Input" tab---------------------------------------------------------------
     dataSplit <- uploadInputFileServer("input")
     displayPlotServer("test", dataSplit)
     

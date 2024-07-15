@@ -1,13 +1,34 @@
+#' Return an empty unknown compound register as dataframe.
+#' 
+#' Return an empty unknown compound register as a dataframe containing four
+#' columns: `CAS` for the CAS registry number, `Compound.Name` for the compound's
+#' common name, `Last.Encounter` for the date of the compound's last encounter,
+#' and `Encounter.Number` for the compound's number of encounters.
+#' 
+#' @return an empty dataframe containing the columns of the unknown compound register
+#' @examples
+#' getEmptyRegister()
 getEmptyRegister <- function() {
-    header <- c("CAS", "common_name", "last_encounter", "encounter_number")
+    header <- c("CAS", "Compound.Name", "Last.Encounter", "Encounter.Number")
     register <- data.frame(matrix(ncol=length(header), nrow=0))
     colnames(register) <- header
     return(register)
 }
 
+#' Filter out compounds based on their common name. Here it classifies
+#' organosilicon compounds as unwanted.
+#' 
+#' Filter out organosilicon compounds based on their common name. The filter
+#' includes contaminants that are not interesting for aroma identification.
+#' The filters are TMS, TBDMS, TBS, TIPS, and sil.
+#' 
+#' @return logical: TRUE for unwanted compounds
+#' @examples
+#' isUnwantedCompound("Dimethyl ether")
+#' isUnwantedCompound("Silane, methyl-")
 isUnwantedCompound <- function(name) {
-    unwanted <- c("TMS", "TBDMS", "TBS", "TIPS", # 6-Chloro-2,3-quinoxalinediol, O, O', di-TMS
-                  "sil" # silanediol
+    unwanted <- c("TMS", "TBDMS", "TBS", "TIPS",
+                  "sil"
                   # phthal
     )
     unwanted <- paste(unwanted, collapse="|")
@@ -15,7 +36,7 @@ isUnwantedCompound <- function(name) {
 }
 
 removeCompoundsInKnowledgeBase <- function(register) {
-    knowledgeBaseEntries <- removePrefix(names(knowledge.base))
+    knowledgeBaseEntries <- getAllCASNumbersInKnowledgeBase()
     entriesToRemove <- intersect(knowledgeBaseEntries, register$CAS)
     if (!identical(entriesToRemove, character(0))) {
         register <- register[!(entriesToRemove %in% register["CAS"])]
@@ -34,15 +55,15 @@ updateUnknownCompoundsRegister <- function(df) {
         CAS <- df[i, "CAS."]
         name <- df[i, "Compound.Name"]
         if (CAS %in% register$CAS) {
-            register$last_encounter[register$CAS == CAS] <- date 
-            count <- as.integer(register$encounter_number[register$CAS == CAS]) + 1
-            register$encounter_number[register$CAS == CAS] <- count
+            register$Last.Encounter[register$CAS == CAS] <- date 
+            count <- as.integer(register$Encounter.Number[register$CAS == CAS]) + 1
+            register$Encounter.Number[register$CAS == CAS] <- count
         } else if (!isUnwantedCompound(name)) {
             register[nrow(register) + 1, ] <- c(CAS, name, date, 1)
         }
     }
     
     register <- removeCompoundsInKnowledgeBase(register)
-    register$encounter_number <- as.integer(register$encounter_number)
+    register$Encounter.Number <- as.integer(register$Encounter.Number)
     saveRDS(register, file=file)
 }

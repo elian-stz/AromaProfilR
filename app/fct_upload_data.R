@@ -8,13 +8,13 @@
 #' that get automatically converted by R.
 #' @return vector containing the minimal header of the input CSV file
 getMinimalHeader <- function() {
-    return(c("CAS.",           # chr   : CAS registry number
-             "Compound.Name",  # chr   : common name
-             "Match.Factor",   # double: match factor calculated by MassHunter
-             "Component.RI",   # double: experimental LRI
-             "File.Name"       # chr   : sample name
-             #"Component.RT", "Component.Area", "Component.Height"
+    return(c("CAS.",          # chr   : CAS registry number
+             "Compound.Name", # chr   : common name
+             "Match.Factor",  # double: match factor calculated by MassHunter
+             "Component.RI",  # double: experimental LRI
+             "File.Name"      # chr   : sample name
     ))
+    #"Component.RT", "Component.Area", "Component.Height"
 }
 
 #' Check the integrity of the input CSV file's header.
@@ -38,8 +38,8 @@ checkFileHeader <- function(header) {
 #' Check the column types of the input dataframe. 
 #' 
 #' Check whether the content of the input CSV file from MassHunter contains
-#' the right types (without converting first). `CAS.` and `File.Name` are 
-#' characters, while the rest is double.
+#' the right types (without converting first). `CAS.`, `File.Name`, and
+#' `Compound.Name` are characters, while the rest is double.
 #' @param df dataframe as the input from MassHunter 
 #' @return logical
 #' @examples
@@ -72,14 +72,34 @@ checkFileIntegrity <- function(df) {
     return(TRUE)
 }
 
-getUnknownCompounds <- function(CAS, table=FALSE) {
+#' Identify CAS registry numbers that are absent from the knowledge base.
+#' 
+#' In a vector of several CAS registry numbers, identify CAS registry numbers
+#' that are absent from the knowledge base.
+#' @param CAS a vector of CAS registry numbers 
+#' @return a vector of CAS registry numbers absent from the knowledge base
+#' @examples
+#' getUnknownCompounds(c("CAS_100-51-6", "CAS_45-12-7"))
+#' getUnknownCompounds(c("100-51-6", "45-12-7"))
+getUnknownCompounds <- function(CAS) {
     entries <- sapply(CAS, isInKnowledgeBase)
     entries <- names(entries[entries == FALSE])
     entries <- table(entries)
-    if (table) return(entries)
     return(names(entries))
 }
 
+#' Identify CAS registry numbers that are in the knowledge base but have no
+#' reference LRI values for one of the column types (polar or non-polar).
+#' 
+#' In a vector of several CAS registry numbers, identify CAS registry numbers
+#' that are in the knowledge base but have no reference LRI values for one of
+#' the column types (polar or non-polar).
+#' @param CAS a vector of CAS registry numbers
+#' @param type type of the column used (polar/non-polar): `LRI_polar` or `LRI_nonpolar`
+#' @return a vector of CAS registry numbers in the knowledge base but with no reference LRI values
+#' @examples
+#' getCompoundsWithoutLRI(c("100-51-6", "45-12-7"), "LRI_polar")
+#' getCompoundsWithoutLRI(c("100-51-6", "45-12-7"), "LRI_nonpolar")
 getCompoundsWithoutLRI <- function(CAS, type=c("LRI_polar", "LRI_nonpolar")) {
     entries <- sapply(CAS, function(entry) {
         LRI <- knowledge.base[[addPrefix(entry)]][[type]]
@@ -89,6 +109,19 @@ getCompoundsWithoutLRI <- function(CAS, type=c("LRI_polar", "LRI_nonpolar")) {
     return(unique(entries))
 }
 
+#' Split a dataframe into a list of three dataframes. The three dataframes
+#' correspond to the classification of each compound on whether their LRI
+#' difference can be calculated. The three dataframes are:
+#' * noLRI: compounds in the knowledge base but with no reference LRI values
+#' * unknown: compounds absent from the knowledge base
+#' * analysable: compounds for which the LRI difference can be calculated
+#' 
+#' @param df a dataframe containing the data from MassHunter
+#' @param type type of the column used (polar/non-polar): `LRI_polar` or `LRI_nonpolar`
+#' @return a list of three dataframes classifying each compound
+#' @examples
+#' splitFileByTag(myDataframe, "LRI_polar")
+#' splitFileByTag(myDataframe, "LRI_nonpolar")
 splitFileByTag <- function(df, type=c("LRI_polar", "LRI_nonpolar")) {
     compoundsWithoutLRI <- getCompoundsWithoutLRI(df$CAS., type)
     unknownCompounds <- getUnknownCompounds(df$CAS.)
@@ -101,24 +134,46 @@ splitFileByTag <- function(df, type=c("LRI_polar", "LRI_nonpolar")) {
     return(split(df, df$tag))
 }
 
+#' Add two columns to the dataframe: `(Median|Mean).Reference.LRI` and `LRI.Difference`.
+#' 
+#' Add two columns to the dataframe: `(Median|Mean).Reference.LRI` and `LRI.Difference`.
+#' `(Median|Mean).Reference.LRI` is the median or average reference LRI value for
+#' one of the column types (polar or non-polar).
+#' `LRI.Difference` results from the calculation of the difference between the
+#' mean or average reference LRI values and the experimental LRI. The difference
+#' is taken as the absolute value.
+#' @param df a dataframe containing the columns `Component.RI` and `CAS.`
+#' @param type type of the column used (polar/non-polar): `LRI_polar` or `LRI_nonpolar`
+#' @param mode calculation of the reference LRI value: `Median` or `Mean`
+#' @return a dataframe containing the LRI difference and reference LRI value
+#' @examples
+#' addLRIDifferenceColumn(myDataframe, "LRI_polar", "Median")
+#' addLRIDifferenceColumn(myDataframe, "LRI_nonpolar", "Mean")
 addLRIDifferenceColumn <- function(df, type=c("LRI_polar", "LRI_nonpolar"), mode=c("Median", "Mean")) {
-    df$LRI.Difference <- lapply(1:nrow(df), function(i) {
+    newColumns <- c(paste(mode, ".Reference.LRI", sep=""), "LRI.Difference")
+    df[newColumns] <- do.call(rbind.data.frame, lapply(1:nrow(df), function(i) {
         experimentalLRI <- df[i, "Component.RI"]
         CASprefix <- addPrefix(df[i, "CAS."])
         if (mode == "Median") referenceLRI <- median(knowledge.base[[CASprefix]][[type]])
         if (mode == "Mean") referenceLRI <- mean(knowledge.base[[CASprefix]][[type]])
-        return(abs(referenceLRI - experimentalLRI))
-    })
-    df$LRI.Difference <- unlist(df$LRI.Difference)
-    browser()
-    if (mode == "Median") {
-        df$Median.Reference.LRI <- median(knowledge.base[[addPrefix(df$CAS.)]][[type]])
-    } else {
-        df$Mean.Reference.LRI <- mean(knowledge.base[[addPrefix(df$CAS.)]][[type]])
-    }
+        difference <- abs(referenceLRI - experimentalLRI)
+        return(c(referenceLRI, difference))
+    }))
     return(df)
 }
 
+#' Split a dataframe into a list of two dataframes: retained and not retained
+#' compounds based on the LRI difference column.
+#' 
+#' Split a dataframe into a list of two dataframes: retained and not retained
+#' compounds based on the LRI difference column. If the LRI difference is higher
+#' than a threshold, then the compound is classified as not retained, otherwise
+#' as retained.
+#' @param df a dataframe containing the column `LRI.Difference`
+#' @param cutoff a threshold to filter the LRI difference (default: 30)
+#' @return a list of dataframes with retained and not retained compounds
+#' @examples
+#' splitAnalysableTag(myDataframe, 30)
 splitAnalysableTag <- function(df, cutoff=30) {
     df$tag <- lapply(df$LRI.Difference, function(value) {
         if (value <= cutoff) return("retained")
@@ -128,6 +183,24 @@ splitAnalysableTag <- function(df, cutoff=30) {
     return(split(df, df$tag))
 }
 
+#' Classify each compound in a dataframe containing data from MassHunter.
+#' This classification includes four groups: retained, notRetained, noLRI, and
+#' unknown.
+#' 
+#' Classify each compound in a dataframe containing data from MassHunter.
+#' This classification includes four groups: retained, notRetained, noLRI, and
+#' unknown. Compounds are retained or not depending on the comparison of their
+#' LRI difference. noLRI compounds are the compounds in the knowledge base but
+#' with no LRI values. Unknown compounds are compounds absent from the knowledge
+#' base.
+#' @param df a dataframe containing data from MassHunter
+#' @param column the type of column used: `Polar` or `Non-polar`
+#' @param mode calculation of the reference LRI: `Median` or `Mean`
+#' @param cutoff a threshold to filter the LRI difference (default: 30)
+#' @return a list of dataframes with the four groups
+#' @examples
+#' getSplitInputFile(myDataframe, "Polar", "Median", 30)
+#' getSplitInputFile(myDataframe, "Non-polar", "Mean", 40)
 getSplitInputFile <- function(df, column=c("Polar", "Non-polar"), mode=c("Median", "Mean"), cutoff=30) {
     if (column == "Polar") type <- "LRI_polar"
     if (column == "Non-polar") type <- "LRI_nonpolar"
@@ -142,7 +215,6 @@ getSplitInputFile <- function(df, column=c("Polar", "Non-polar"), mode=c("Median
             "notRetained" = analysee[["not retained"]],
             "noLRI" = firstSplit[["noLRI"]],
             "unknown" = firstSplit[["unknown"]]
-            )
-        )
+        ))
     }
 }
