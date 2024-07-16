@@ -14,7 +14,7 @@ importExcelFileServer <- function(id, data) {
             filename = function() paste(Sys.Date(), "_classification.xlsx", sep=""),
             content = function(con) {
                 fileContent <- addKnowledgeBaseInfo(data())
-                openxlsx::write.xlsx(fileContent, file=con, rowNames=FALSE)
+                openxlsx::write.xlsx(fileContent, file=con, rowNames=FALSE, keepNA=TRUE, na.string="NA")
             }
         )
     })

@@ -25,3 +25,4 @@ require(shinymanager)
 
 # Initialising files------------------------------------------------------------
 knowledge.base.commit.logs()
+createEmptyUnknownCompoundRegister()

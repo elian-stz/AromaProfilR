@@ -20,9 +20,14 @@ uploadInputFileUI <- function(id) {
             max=300
         ),
         fileInput(
-            inputId=ns("file"),
+            inputId=ns("MHfile"),
             label="Upload MassHunter output file as CSV",
             accept=".csv"
+        ),
+        fileInput(
+            inputId=ns("designFile"),
+            label="Upload design file as TSV",
+            accept=".tsv"
         )
     )
 }
@@ -30,10 +35,11 @@ uploadInputFileUI <- function(id) {
 uploadInputFileServer <- function(id) {
     moduleServer(id, function(input, output, session) {
             data <- reactive({
-                req(input$file)
-                df <- read.csv(input$file$datapath, na.strings=c(""))
+                req(input$MHfile, input$designFile)
+                MHdf <- read.csv(input$MHfile$datapath, na.strings=c(""))
+                designdf <- read.csv(input$designFile$datapath, na.strings=c(""), sep="\t")
                 if (input$cutoff > 0 && input$cutoff <= 300) {
-                    getSplitInputFile(df, input$columnType, input$method, input$cutoff)
+                    getSplitInputFile(MHdf, designdf, input$columnType, input$method, input$cutoff)
                 }
             })
             return(data)
@@ -53,6 +59,7 @@ displayPlotUI <- function(id) {
 displayPlotServer <- function(id, data) {
     moduleServer(id, function(input, output, session) {
         output$dt <- renderDataTable({
+            #stopifnot(data() == 1)
             data()$retained
         })
     })

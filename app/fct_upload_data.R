@@ -183,6 +183,35 @@ splitAnalysableTag <- function(df, cutoff=30) {
     return(split(df, df$tag))
 }
 
+#' Check the integrity of the design file by verifying its header and if its
+#' `File.Name` levels fit with those of the MassHunter file.
+#' 
+#' Check the integrity file by verifying its header (`File.Name`, `Condition`, 
+#' `Replicate`, and `Label`) as well as the correspondance between the levels
+#' of the design file from the `File.Name` and those of the MassHunter file.
+#' @param designFileElement element of the design file: header or levels as vector
+#' @param MHfileElement element of the MassHunter file: header or levels as vector (default: NA)
+#' @param check element to be checked: `levels` or `header`
+#' @return logical: TRUE if the integrity of the design file is verified
+#' @examples
+#' checkDesignFileIntegrity(c("File.Name", "Condition"), NA, "header")
+#' checkDesignFileIntegrity(c("File.Name", "Condition", "Replicate", "Label"), NA, "header")
+#' checkDesignFileIntegrity(c("control.D"), c("control.D", "yeast.D"), "levels")
+#' checkDesignFileIntegrity(c("control.D", "yeast.D"), c("control.D", "yeast.D"), "levels")
+checkDesignFileIntegrity <- function(designFileElement, MHfileElement=NA, check=c("levels", "header")) {
+    if (check == "header") expected <- c("File.Name", "Condition", "Replicate", "Label")
+    if (check == "levels" && !is.na(MHfileElement)) expected <- MHfileElement
+    
+    # check the differences between the header or the levels 
+    difference <- setdiff(expected, designFileElement)
+    if (identical(difference, character(0))) return(TRUE)
+    
+    # Notification
+    if (check == "header") notification("wrong.design.file.header", paste(difference, collapse=", "))
+    if (check == "levels") notification("wrong.design.file.levels")
+    return(FALSE)
+}
+
 #' Classify each compound in a dataframe containing data from MassHunter.
 #' This classification includes four groups: retained, notRetained, noLRI, and
 #' unknown.
@@ -193,28 +222,37 @@ splitAnalysableTag <- function(df, cutoff=30) {
 #' LRI difference. noLRI compounds are the compounds in the knowledge base but
 #' with no LRI values. Unknown compounds are compounds absent from the knowledge
 #' base.
-#' @param df a dataframe containing data from MassHunter
+#' @param MHfile a dataframe containing data from MassHunter
+#' @param designFile a design file containing the experiment's design
 #' @param column the type of column used: `Polar` or `Non-polar`
 #' @param mode calculation of the reference LRI: `Median` or `Mean`
 #' @param cutoff a threshold to filter the LRI difference (default: 30)
 #' @return a list of dataframes with the four groups
 #' @examples
-#' getSplitInputFile(myDataframe, "Polar", "Median", 30)
-#' getSplitInputFile(myDataframe, "Non-polar", "Mean", 40)
-getSplitInputFile <- function(df, column=c("Polar", "Non-polar"), mode=c("Median", "Mean"), cutoff=30) {
+#' getSplitInputFile(myMHfile, myDesignFile, "Polar", "Median", 30)
+#' getSplitInputFile(myMHfile, myDesignFile, "Non-polar", "Mean", 40)
+getSplitInputFile <- function(MHfile, designFile, column=c("Polar", "Non-polar"), mode=c("Median", "Mean"), cutoff=30) {
+    # Check file integrity of design file and MassHunter file
+    if (!checkFileIntegrity(MHfile)) return(1)
+    if (!checkDesignFileIntegrity(colnames(designFile), NA, "header")) return(1)
+    if (!checkDesignFileIntegrity(unique(designFile$File.Name), unique(MHfile$File.Name), "levels")) return(1)
+    
+    # Local variables 
     if (column == "Polar") type <- "LRI_polar"
     if (column == "Non-polar") type <- "LRI_nonpolar"
     
-    if (checkFileIntegrity(df)) {
-        firstSplit <- splitFileByTag(df, type)
-        analysee <- firstSplit[["analysable"]]
-        analysee <- addLRIDifferenceColumn(analysee, type, mode)
-        analysee <- splitAnalysableTag(analysee, cutoff)
-        return(list(
-            "retained" = analysee[["retained"]],
-            "notRetained" = analysee[["not retained"]],
-            "noLRI" = firstSplit[["noLRI"]],
-            "unknown" = firstSplit[["unknown"]]
-        ))
-    }
+    # Merge design file and MassHunter file
+    MHfile <- merge(x=MHfile, y=designFile, all.x=TRUE)
+
+    # Split into 4 groups: retained, notRetained, noLRI, unknown
+    firstSplit <- splitFileByTag(MHfile, type)
+    analysee <- firstSplit[["analysable"]]
+    analysee <- addLRIDifferenceColumn(analysee, type, mode)
+    analysee <- splitAnalysableTag(analysee, cutoff)
+    return(list(
+        "retained" = analysee[["retained"]],
+        "notRetained" = analysee[["not retained"]],
+        "noLRI" = firstSplit[["noLRI"]],
+        "unknown" = firstSplit[["unknown"]]
+    ))
 }

@@ -1,7 +1,14 @@
-###########################################################
-# Create an encrypted SQLite database                     #
-###########################################################
+#' Return the SQLite path.
+#' @examples
+#' getSQLitePath()
+getSQLitePath <- function() return("./data/login_db.sqlite")
 
+#' Create an encrypted SQLite database containing users' credentials.
+#'
+#' Create an encrypted SQLite database containing users' credentials. Credentials
+#' are stored in the `.Renviron` file.
+#' @examples
+#' createSQLiteDB()
 createSQLiteDB <- function() {
 	# environment variables
 	db.passphrase  <- Sys.getenv("DB_PASSPHRASE")
@@ -19,13 +26,16 @@ createSQLiteDB <- function() {
 	# Create the encrypted database
 	shinymanager::create_db(
 				credentials_data = credentials,
-				sqlite_path = "./data/login_db.sqlite",
+				sqlite_path = getSQLitePath(),
 				passphrase = db.passphrase
 	)
 }
 
-main <- function() {
-	if (!file.exists("./data/login_db.sqlite")) createSQLiteDB()
+#' Write or overwrite the SQLite database containing users' credentials.
+#' @examples
+#' writeLoginDB()
+writeLoginDB <- function() {
+	if (!file.exists(getSQLitePath())) createSQLiteDB()
 	else {
 		cat("Do you really want to overwrite the database? (y/n)\n")
 		choice <- readLines("stdin", 1)
@@ -34,4 +44,4 @@ main <- function() {
 	}
 }
 
-main()
+writeLoginDB()
