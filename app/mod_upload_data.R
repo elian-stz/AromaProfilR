@@ -38,7 +38,7 @@ uploadInputFileServer <- function(id) {
                 req(input$MHfile, input$designFile)
                 MHdf <- read.csv(input$MHfile$datapath, na.strings=c(""))
                 designdf <- read.csv(input$designFile$datapath, na.strings=c(""), sep="\t")
-                if (input$cutoff > 0 && input$cutoff <= 300) {
+                if (input$cutoff > 0 & input$cutoff <= 300) {
                     getSplitInputFile(MHdf, designdf, input$columnType, input$method, input$cutoff)
                 }
             })

@@ -1,11 +1,14 @@
 displayRegisterUI <- function(id) {
     ns <- NS(id)
     tagList(
-        tags$p("The datatable below contains every compound finds in th"),
+        tags$p("The datatable below contains the unknown compound register. It references all compounds found in the file from MassHunter that are absent from the knowledge base."),
+        tags$p(HTML("Currently, compounds containing <code>TMS</code>, <code>TBDMS</code>, <code>TBS</code>, <code>TIPS</code>, and <code>sil</code> in their name are excluded.")),
+        tags$p("You can download the unknown compound register as TSV below."),
         downloadLink(
             outputId=ns("download"),
             label="Download unknown compound register"
         ),
+        br(),br(),
         dataTableOutput(
             outputId=ns("dt")
         )
@@ -14,12 +17,21 @@ displayRegisterUI <- function(id) {
 
 displayRegisterServer <- function(id, dataSplit) {
     moduleServer(id, function(input, output, session) {
-        output$dt <- renderDataTable({
-            #invalidateLater(10000, session)
+        
+        refreshTrigger <- reactiveVal(0)
+        
+        observeEvent(dataSplit(), {
             updateUnknownCompoundsRegister(dataSplit()$unknown)
-            file <- "data/unknown_compounds_register.rds"
-            if (file.exists(file)) readRDS(file)
+            refreshTrigger(refreshTrigger() + 1)
         })
+        
+        output$dt <- renderDataTable({
+            refreshTrigger()
+            #invalidateLater(2000, session) #10000
+            file <- "data/unknown_compounds_register.rds"
+            if (file.exists(file)) readRDS(file) else data.frame()
+        })
+        
         output$download <- downloadHandler(
             filename = function() paste(Sys.Date(), "_unknown_compound_register.tsv", sep=""),
             content = function(con) {

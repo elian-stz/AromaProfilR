@@ -81,4 +81,5 @@ updateUnknownCompoundsRegister <- function(unknownGroup) {
     register <- removeCompoundsFromRegister(register)
     register$Encounter.Number <- as.integer(register$Encounter.Number)
     saveRDS(register, file=file)
+    return(0)
 }

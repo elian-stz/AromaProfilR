@@ -23,8 +23,8 @@ add.single.cas.number <- function(CAS, chemicalFamily) {
     if (isCAS(CAS)) {
         cas.prefix <- addPrefix(CAS)
         if (!isInKnowledgeBase(cas.prefix)) {
-            cid <- cas2cid(CAS) # 2 NCBI queries
-            if (length(cid) == 1 && !is.na(cid)) {
+            cid <- cas2cid(CAS) # 1 to 2 PubChem queries
+            if (length(cid) == 1 & !is.na(cid)) {
                 save.knowledge.base(knowledge.base, overwrite=FALSE)
                 knowledge.base[[cas.prefix]] <- get.entry.info(cid, CAS, chemicalFamily)
                 save.knowledge.base(knowledge.base, overwrite=TRUE)
@@ -32,7 +32,7 @@ add.single.cas.number <- function(CAS, chemicalFamily) {
                 knowledge.base.commit.logs(message)
                 notification("success.one.addition")
             } else {
-                if (is.na(cid) || length(cid) == 0) notification("no.cid")
+                if (is.na(cid) | length(cid) == 0) notification("no.cid")
                 if (length(cid) > 1) notification("too.many.cid", length(cid))
             }
         } else notification("input.already.present")
@@ -40,15 +40,16 @@ add.single.cas.number <- function(CAS, chemicalFamily) {
 }
 
 get.entry.info <- function(cid, cas, chemicalFamily) {
-    properties <- getPropertiesFromCID(cid)
-    smiles <- properties$CanonicalSMILES
+    properties <- getPropertiesFromCID(cid) # 1 query
+    smiles <- properties$CanonicalSMILES # 1 query
     
-    common_name <- getCommonName(cid)
+    common_name <- getCommonName(cid) # 1 query
     Sys.sleep(1)
-    LRI_polar <- getLRI(cid, type="polar", canonicalSMILES=smiles)
-    LRI_nonpolar <- getLRI(cid, type="non-polar", canonicalSMILES=smiles)
-    odor_pubchem <- getPubchemDescriptors(cid, type="Odor")
-    taste_pubchem <- getPubchemDescriptors(cid, type="Taste")
+    LRI_polar <- getLRI(cid, type="polar", canonicalSMILES=smiles) # 3 queries
+    Sys.sleep(1)
+    LRI_nonpolar <- getLRI(cid, type="non-polar", canonicalSMILES=smiles) # 3 queries
+    odor_pubchem <- getPubchemDescriptors(cid, type="Odor") # 1 query
+    taste_pubchem <- getPubchemDescriptors(cid, type="Taste") # 1 query
     Sys.sleep(1)
     
     entry <- list(
@@ -72,7 +73,7 @@ get.entry.info <- function(cid, cas, chemicalFamily) {
 
 # Template generation feature---------------------------------------------------
 generate.prefilled.template <- function(text.field) {
-    if (tolower(text.field) == "empty" || text.field == "") return(empty.template())
+    if (tolower(text.field) == "empty" | text.field == "") return(empty.template())
     if (tolower(text.field) == "all") return(knowledge.base.to.dataframe(knowledge.base))
     
     cas.numbers <- unlist(strsplit(text.field, split=" "))
@@ -94,10 +95,6 @@ empty.template <- function() {
     colnames(df) <- header
     return(df)
 }
-
-# Knowledge base edition with template feature----------------------------------
-# TODO what to display on the template file: the previous info or the flag
-# TODO checking separators for vector-like structures
 
 edit.with.template <- function(df) {
     # Checking colnames
@@ -167,7 +164,7 @@ template.to.entry <- function(df, type=c("edit.existing", "add")) {
     # Assign each cell of the template to the entry object
     for (attribute in header) {
         cell <- df[1, attribute]
-        if ((is.na(cell) || tolower(cell) == flag) && type == "edit.existing") {
+        if ((is.na(cell) | tolower(cell) == flag) & type == "edit.existing") {
             cas.prefix <- addPrefix(df[1, "CAS"])
             entry[[attribute]] <- knowledge.base[[cas.prefix]][[attribute]]
         } else {
@@ -216,7 +213,7 @@ save.knowledge.base <- function(kb, overwrite=FALSE) {
 # Log file management feature---------------------------------------------------
 bash.append.from.bottom.to.top <- function(message, file) {
     # append message from bottom to top of a file
-    return(paste("echo '", message, "' | cat - ", file, " > temp && mv temp ", file, sep=""))
+    return(paste("echo '", message, "' | cat - ", file, " > temp & mv temp ", file, sep=""))
 }
 
 knowledge.base.commit.logs <- function(message1=NA, message2=NA) {

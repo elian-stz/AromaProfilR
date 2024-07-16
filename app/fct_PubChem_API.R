@@ -13,7 +13,7 @@ cas2cid <- function(CAS) {
     
     # Query PubChem
     convertee <- try(webchem::get_cid(query=CAS, domain="compound", from="cas", match="all"))
-    if (inherits(convertee, "try-error") || length(convertee) == 0) return(NA)
+    if (inherits(convertee, "try-error") | length(convertee) == 0) return(NA)
     
     # Change type and check if a single CID is returned
 	convertee <- as.integer(convertee$cid)
@@ -46,7 +46,7 @@ getPropertiesFromCID <- function(CID) {
     # Query Pubchem
     header <- colnames(emptyDF)
     propertiesDF <- try(webchem::pc_prop(cid=CID, properties=header))
-    if (inherits(propertiesDF, "try-error") || length(propertiesDF) == 0) return(emptyDF)
+    if (inherits(propertiesDF, "try-error") | length(propertiesDF) == 0) return(emptyDF)
     
     # Check if all columns are here, otherwise append column with NA
     missingColumns <- setdiff(header, colnames(propertiesDF))
@@ -77,11 +77,19 @@ getCommonName <- function(CID) {
     
     # Query PubChem
     df <- try(webchem::pc_sect(id=CID, section="Synonyms"))
-    if (inherits(df, "try-error") || length(df) == 0) return(NA)
+    if (inherits(df, "try-error") | length(df) == 0) return(NA)
     
     name <- df[1, "Name"]
     name <- toString(name)
     return(name)
+}
+
+findKovatsSubsubsection <- function(query) {
+    for (i in 1:length(query)) {
+        if (query[[i]]$TOCHeading == "Kovats Retention Index") {
+            return(i)
+        }
+    }
 }
 
 #' Retrieve LRI (Linear Retention Indices) of a compound via its PubChem CID.
@@ -117,13 +125,20 @@ getLRI <- function(CID, type=c("polar", "non-polar", "semi-standard non-polar"),
     if (type == "semi-standard non-polar") name <- "Semi-standard non-polar"
     
     # Query PubChem
-    df <- try(PubChemR::get_pug_view(identifier=CID, domain="compound", heading="Kovats Retention Index", annotation = "Data"))
-    if (inherits(df, "try-error") || length(df) == 0) return(NA)
+    object <- try(PubChemR::get_pug_view(identifier=CID, domain="compound", annotation = "Data"))
+    if (inherits(object, "try-error") | length(object) == 0) return(NA)
+    section <- try(PubChemR::sectionList(object, .pattern="Chemical and Physical Properties"))
+    if (inherits(section, "try-error") | length(section) == 0) return(NA)
+    section <- section$SectionID
+    df <- try(PubChemR::section(object, .id=section))
+    if (inherits(df, "try-error") | length(df) == 0) return(NA)
+    df <- df[["result"]][["Section"]][[2]][["Section"]]
     
     # Loop through LRI types: polar, non-polar, semi-standard non-polar or all column types
-    LRISection <- df$Record$Section[[1]]$Section[[1]]$Section[[1]]$Information
+    subsubsection <- findKovatsSubsubsection(df)
+    LRISection <- df[[subsubsection]][["Information"]]
     # If "All column types" type is the only type then return always these LRI
-    if (length(LRISection) == 1 && LRISection[[1]]$Name == "All column types") {
+    if (length(LRISection) == 1 & LRISection[[1]]$Name == "All column types") {
         return(LRISection[[1]]$Value$Number)
     }
     for (i in 1:length(LRISection)) {
@@ -150,7 +165,7 @@ getPubchemDescriptors <- function(CID, type=c("Odor", "Taste")) {
     if (is.na(CID)) return(NA)
     # Query NCBI
     df <- try(webchem::pc_sect(id=CID, section=type))
-    if (inherits(df, "try-error") || length(df) == 0) return(NA)
+    if (inherits(df, "try-error") | length(df) == 0) return(NA)
     
     # Split and select unique descriptors
     df <- tolower(df$Result)

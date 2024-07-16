@@ -89,7 +89,7 @@ addSingleCASNumberUI <- function(id) {
 addSingleCASNumberServer <- function(id) {
     moduleServer(id, function(input, output, session) {
             observeEvent(input$submit, {
-                if (input$textField != "" && input$choice != "") {
+                if (input$textField != "" & input$choice != "") {
                     shinyjs::disable("submit")
                     #tags$style(HTML(".container-fluid {cursor: wait;}"))
                     add.single.cas.number(input$textField, input$choice)

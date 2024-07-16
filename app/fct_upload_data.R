@@ -49,8 +49,8 @@ checkFileColumnType <- function(df) {
    chrCol <- c("CAS.", "File.Name", "Compound.Name")
    doubleCol <- header[!(header %in% chrCol)]
    for (i in header) {
-       if (i %in% chrCol && !is.character(df[[i]])) return(FALSE)
-       if (i %in% doubleCol && !is.double(df[[i]])) return(FALSE)
+       if (i %in% chrCol & !is.character(df[[i]])) return(FALSE)
+       if (i %in% doubleCol & !is.double(df[[i]])) return(FALSE)
    }
    return(TRUE)
 }
@@ -198,9 +198,9 @@ splitAnalysableTag <- function(df, cutoff=30) {
 #' checkDesignFileIntegrity(c("File.Name", "Condition", "Replicate", "Label"), NA, "header")
 #' checkDesignFileIntegrity(c("control.D"), c("control.D", "yeast.D"), "levels")
 #' checkDesignFileIntegrity(c("control.D", "yeast.D"), c("control.D", "yeast.D"), "levels")
-checkDesignFileIntegrity <- function(designFileElement, MHfileElement=NA, check=c("levels", "header")) {
-    if (check == "header") expected <- c("File.Name", "Condition", "Replicate", "Label")
-    if (check == "levels" && !is.na(MHfileElement)) expected <- MHfileElement
+checkDesignFileIntegrity <- function(designFileElement, MHfileElement, check=c("levels", "header")) {
+    if (check == "header" && is.na(MHfileElement)) expected <- c("File.Name", "Condition", "Replicate", "Label")
+    if (check == "levels" && length(MHfileElement) > 1) expected <- MHfileElement
     
     # check the differences between the header or the levels 
     difference <- setdiff(expected, designFileElement)
@@ -233,9 +233,9 @@ checkDesignFileIntegrity <- function(designFileElement, MHfileElement=NA, check=
 #' getSplitInputFile(myMHfile, myDesignFile, "Non-polar", "Mean", 40)
 getSplitInputFile <- function(MHfile, designFile, column=c("Polar", "Non-polar"), mode=c("Median", "Mean"), cutoff=30) {
     # Check file integrity of design file and MassHunter file
-    if (!checkFileIntegrity(MHfile)) return(1)
-    if (!checkDesignFileIntegrity(colnames(designFile), NA, "header")) return(1)
-    if (!checkDesignFileIntegrity(unique(designFile$File.Name), unique(MHfile$File.Name), "levels")) return(1)
+    if (!checkFileIntegrity(MHfile)) return(NULL)
+    if (!checkDesignFileIntegrity(colnames(designFile), NA, "header")) return(NULL)
+    if (!checkDesignFileIntegrity(unique(designFile$File.Name), unique(MHfile$File.Name), "levels")) return(NULL)
     
     # Local variables 
     if (column == "Polar") type <- "LRI_polar"

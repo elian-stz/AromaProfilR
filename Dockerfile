@@ -23,4 +23,6 @@ COPY app/www/. ./www/
 
 COPY .Renviron ./
 
+#RUN chown shiny:shiny data/compound_knowledge_base.rds
+
 USER shiny
