@@ -2,7 +2,7 @@
 
 ## How to install
 
-1. Git clone the project
+1. Clone the project.
 2. Change to the cloned directory, and create a `.Renviron` file that contains this:
 
 ```
@@ -14,12 +14,10 @@ ADMIN2_MAIL=admin2@mail.com
 ADMIN3_MAIL=admin3@mail.com
 ```
 
-3. In the same directory, type:
-
-```
-make install
-```
+3. In the same directory, type `make install`.
+4. Head to [127.0.0.1:3838](http://127.0.0.1:3838/) to access the tool.
 
 ## Dependencies
 
-* Docker
+* Docker version version 27.0.3
+* Docker Compose version v2.24.5

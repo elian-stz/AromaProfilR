@@ -24,11 +24,26 @@ uploadInputFileUI <- function(id) {
             label="Upload MassHunter output file as CSV",
             accept=".csv"
         ),
+        tags$p("The MassHunter file must contain at least 5 columns:"),
+        tags$ul(
+            tags$li("CAS#"),
+            tags$li("Compound Name"),
+            tags$li("Match Factor"),
+            tags$li("Component RI"),
+            tags$li("File Name")
+        ),
         fileInput(
             inputId=ns("designFile"),
             label="Upload design file as TSV",
             accept=".tsv"
-        )
+        ),
+        tags$p("The design file must contain at least 4 columns:"),
+        tags$ul(
+            tags$li("File.Name"),
+            tags$li("Condition"),
+            tags$li("Replicate"),
+            tags$li("Label")
+        ),
     )
 }
 
@@ -59,7 +74,6 @@ displayPlotUI <- function(id) {
 displayPlotServer <- function(id, data) {
     moduleServer(id, function(input, output, session) {
         output$dt <- renderDataTable({
-            #stopifnot(data() == 1)
             data()$retained
         })
     })
