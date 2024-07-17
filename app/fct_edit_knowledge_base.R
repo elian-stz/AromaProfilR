@@ -213,7 +213,7 @@ save.knowledge.base <- function(kb, overwrite=FALSE) {
 # Log file management feature---------------------------------------------------
 bash.append.from.bottom.to.top <- function(message, file) {
     # append message from bottom to top of a file
-    return(paste("echo '", message, "' | cat - ", file, " > temp & mv temp ", file, sep=""))
+    return(paste("echo '", message, "' | cat - ", file, " > data/temp & mv data/temp ", file, sep=""))
 }
 
 knowledge.base.commit.logs <- function(message1=NA, message2=NA) {

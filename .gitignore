@@ -2,5 +2,7 @@ app/.Rhistory
 app/.Renviron
 app/data/login_db.sqlite
 app/data/knowledge_base_commit.log
+app/data/unknown_compounds_register.rds
+app/data/compound_knowledge_base.rds
 app/data/previous_compound_knowledge_bases/
 .Rhistory
