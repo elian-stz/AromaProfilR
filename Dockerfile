@@ -9,7 +9,7 @@ RUN rm -rf /srv/shiny-server/* \
 		libxml2 \
 		libmagick++-dev \
 		vim \
-	&& R -e "install.packages(c('shinymanager', 'webchem', 'PubChemR', 'openxlsx'))"
+	&& R -e "install.packages(c('shinyjs', 'shinymanager', 'webchem', 'PubChemR', 'openxlsx'))"
 
 WORKDIR /srv/shiny-server/
 
@@ -22,7 +22,5 @@ COPY app/*.R ./
 COPY app/www/. ./www/
 
 COPY .Renviron ./
-
-#RUN chown shiny:shiny data/compound_knowledge_base.rds
 
 USER shiny

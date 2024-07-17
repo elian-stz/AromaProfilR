@@ -18,8 +18,7 @@ db-user-rm:
 	$(EXEC) rm data/login_db.sqlite
 
 db-compound-init:
-	$(DC) cp app/data/compound_knowledge_base.rds app:/srv/shiny-server/data/.
-	#$(EXEC) chown shiny:shiny /srv/shiny-server/data/compound_knowledge_base.rds
+	$(DC) cp -a app/data/compound_knowledge_base_cpy.rds app:/srv/shiny-server/data/compound_knowledge_base.rds
 	$(EXEC) mkdir -p data/descriptor_db
 	$(DC) cp app/data/descriptor_db/flavornet_odor_descriptors.csv app:/srv/shiny-server/data/descriptor_db/.
 	$(DC) cp app/data/descriptor_db/goodscents_odor_descriptors.csv app:/srv/shiny-server/data/descriptor_db/.

@@ -1,4 +1,4 @@
-# stage_retraitement_GCMS
+# retraitementGCMS
 
 ## How to install
 
@@ -9,6 +9,9 @@
 DB_PASSPHRASE=mypassphrase
 ADMIN_ID=myadmin
 ADMIN_PASSWORD=mypassword
+ADMIN1_MAIL=admin1@mail.com
+ADMIN2_MAIL=admin2@mail.com
+ADMIN3_MAIL=admin3@mail.com
 ```
 
 3. In the same directory, type:
