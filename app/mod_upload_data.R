@@ -53,8 +53,9 @@ uploadInputFileServer <- function(id) {
     moduleServer(id, function(input, output, session) {
             data <- reactive({
                 req(input$MHfile, input$designFile)
-                MHdf <- read.csv(input$MHfile$datapath, na.strings=c(""))
-                designdf <- read.csv(input$designFile$datapath, na.strings=c(""), sep="\t")
+                MHdf <- try(read.csv(input$MHfile$datapath, na.strings=c("", "NA")))
+                designdf <- try(read.csv(input$designFile$datapath, na.strings=c("", "NA"), sep="\t"))
+                if (inherits(MHdf, "try-error") || inherits(designdf, "try-error")) return(NULL)
                 if (input$cutoff > 0 & input$cutoff <= 300) {
                     getSplitInputFile(MHdf, designdf, input$columnType, input$method, input$cutoff)
                 }

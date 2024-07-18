@@ -46,7 +46,7 @@ submitTemplateUI <- function(id) {
         fileInput(
             inputId=ns("upload"),
             label="Upload the filled template",
-            accept=c(".tsv", ".csv")
+            accept=c(".tsv", ".csv") # CSV can be tab-separated
         ),
         tags$hr()
     )
@@ -56,7 +56,8 @@ submitTemplateServer <- function(id) {
     moduleServer(id, function(input, output, session) {
             observeEvent(input$upload, {
                 if (tools::file_ext(input$upload$name) == "tsv") {
-                    df <- read.csv(input$upload$datapath, sep="\t", na.strings=c("", "NA"))
+                    df <- try(read.csv(input$upload$datapath, sep="\t", na.strings=c("", "NA")))
+                    if (inherits(df, "try-error")) return(NULL)
                     colnames(df)[colnames(df) == "molecular_weight_g.mol.1"] <- "molecular_weight_g.mol-1"
                     edit.with.template(df)
                 } else notification("invalid.file")
