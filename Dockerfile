@@ -23,4 +23,6 @@ COPY app/www/. ./www/
 
 COPY .Renviron ./
 
+RUN chown -R shiny:shiny /usr/local/lib/R/etc
+
 USER shiny

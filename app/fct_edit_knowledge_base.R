@@ -211,23 +211,25 @@ save.knowledge.base <- function(kb, overwrite=FALSE) {
 }
 
 # Log file management feature---------------------------------------------------
-bash.append.from.bottom.to.top <- function(message, file) {
+bash.append.from.bottom.to.top <- function(message) {
+    file <- "data/knowledge_base_commit.log"
     # append message from bottom to top of a file
-    return(paste("echo '", message, "' | cat - ", file, " > data/temp & mv data/temp ", file, sep=""))
+    return(paste("echo '", message, "' | cat - ", file, " > data/temp && mv data/temp ", file, sep=""))
 }
 
 knowledge.base.commit.logs <- function(message1=NA, message2=NA) {
     logfile <- "data/knowledge_base_commit.log"
+    time <- format(Sys.time(), "%Y-%m-%d %H:%M:%S")
     if (!file.exists(logfile)) {
-        system(paste("echo ", Sys.time(), " > ", logfile, sep=""))
+        system(paste("echo ", time, " > ", logfile, sep=""))
         system(paste("echo 'Compound knowledge base first version' >> ", logfile, sep=""))
     }
     
     if (!is.na(message1)) {
-        system(bash.append.from.bottom.to.top(message="", file=logfile))
-        system(bash.append.from.bottom.to.top(message=message1, file=logfile))
-        if (!is.na(message2)) system(bash.append.from.bottom.to.top(message=message2, file=logfile))
-        system(bash.append.from.bottom.to.top(message=Sys.time(), file=logfile))
+        system(bash.append.from.bottom.to.top(message=""))
+        system(bash.append.from.bottom.to.top(message=message1))
+        if (!is.na(message2)) system(bash.append.from.bottom.to.top(message=message2))
+        system(bash.append.from.bottom.to.top(message=time))
     }
 }
 

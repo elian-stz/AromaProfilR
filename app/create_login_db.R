@@ -37,7 +37,7 @@ createSQLiteDB <- function() {
 writeLoginDB <- function() {
 	if (!file.exists(getSQLitePath())) createSQLiteDB()
 	else {
-		cat("Do you really want to overwrite the database? (y/n)\n")
+		cat("Do you really want to overwrite the SQLite database? (y/n)\n")
 		choice <- readLines("stdin", 1)
 		choice <- tolower(choice)
 		if (choice == "y" | choice == "yes") createSQLiteDB()
