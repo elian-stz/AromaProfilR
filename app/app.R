@@ -3,7 +3,7 @@ source("global.R")
 ui <- fluidPage(
     includeCSS("www/global_style.css"),
     
-    navbarPage(title="Aroma Profiler", id="main", windowTitle="Aroma Profiler",
+    navbarPage(title="AromaProfilR", id="main", windowTitle="AromaProfilR",
                tabPanel(title="Input",
                         sidebarLayout(
                             sidebarPanel(

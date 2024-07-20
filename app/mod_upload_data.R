@@ -21,7 +21,7 @@ uploadInputFileUI <- function(id) {
         ),
         fileInput(
             inputId=ns("MHfile"),
-            label="Upload MassHunter file as CSV",
+            label="Upload MassHunter file as CSV with comma as separator",
             accept=".csv"
         ),
         div(style = "margin-top: -20px"),
@@ -39,7 +39,7 @@ uploadInputFileUI <- function(id) {
             accept=".tsv"
         ),
         div(style = "margin-top: -20px"),
-        tags$p("The design file sums up your experiments. It must contain at least 4 columns:"),
+        tags$p("The design file sums up your experiments. It must contain 4 columns:"),
         tags$ul(
             tags$li("File Name"),
             tags$li("Condition"),

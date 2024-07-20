@@ -1,4 +1,4 @@
-# retraitementGCMS
+# AromaProfilR
 
 ## How to install
 
