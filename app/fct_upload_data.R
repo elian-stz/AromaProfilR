@@ -256,3 +256,12 @@ getSplitInputFile <- function(MHfile, designFile, column=c("Polar", "Non-polar")
         "unknown" = firstSplit[["unknown"]]
     ))
 }
+
+
+getSummary <- function(df) {
+    summary <- list()
+    info <- c("compoundNumber", "conditionNumber", "table")
+    summary[["compoundNumber"]] <- sum(unname(sapply(df, nrow)))
+    summary[["conditionNumber"]] <- length(table(sapply, function(x) x$Condition))
+    #summary[["table"]] <- 
+}

@@ -45,7 +45,7 @@ uploadInputFileUI <- function(id) {
             tags$li("Condition"),
             tags$li("Replicate"),
             tags$li("Label")
-        ),
+        )
     )
 }
 
@@ -61,6 +61,31 @@ uploadInputFileServer <- function(id) {
                 }
             })
             return(data)
+    })
+}
+
+downloadExampleFilesUI <- function(id) {
+    ns <- NS(id)
+    tagList(
+        br(),
+        tags$p("Example files are provided below"),
+        downloadLink(
+            outputId=ns("download"),
+            label="Download example files"
+        )
+    )
+}
+
+downloadExampleFilesServer <- function(id) {
+    moduleServer(id, function(input, output, session) {
+        output$download <- downloadHandler(
+            filename = function() {
+                paste("example_input_files.zip", sep="")
+            },
+            content = function(con) {
+                file.copy("data/example_input_files.zip", con)
+            }
+        )
     })
 }
 

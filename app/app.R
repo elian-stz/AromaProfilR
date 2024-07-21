@@ -7,7 +7,8 @@ ui <- fluidPage(
                tabPanel(title="Input",
                         sidebarLayout(
                             sidebarPanel(
-                                uploadInputFileUI("input")
+                                uploadInputFileUI("input"),
+                                downloadExampleFilesUI("example")
                             ),
                             mainPanel(
                                 displayPlotUI("test")
@@ -69,6 +70,7 @@ server <- function(input, output, session) {
     
     # "Input" tab---------------------------------------------------------------
     dataSplit <- uploadInputFileServer("input")
+    downloadExampleFilesServer("example")
     displayPlotServer("test", dataSplit)
     
     # "Output" tab--------------------------------------------------------------

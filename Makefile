@@ -22,6 +22,7 @@ db-compound-init:
 	$(EXEC) mkdir -p data/descriptor_db
 	$(DC) cp app/data/descriptor_db/flavornet_odor_descriptors.csv app:/srv/shiny-server/data/descriptor_db/.
 	$(DC) cp app/data/descriptor_db/goodscents_odor_descriptors.csv app:/srv/shiny-server/data/descriptor_db/.
+	$(DC) cp app/data/example_input_files.zip app:/srv/shiny-server/data/.
 
 db-compound-rm:
 	$(EXEC) rm -f data/compound_knowledge_base.rds
