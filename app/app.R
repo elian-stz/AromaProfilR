@@ -11,7 +11,7 @@ ui <- fluidPage(
                                 downloadExampleFilesUI("example")
                             ),
                             mainPanel(
-                                displayPlotUI("test")
+                                displayInputSummaryUI("inputSummary")
                             )
                         )
                ),
@@ -71,7 +71,7 @@ server <- function(input, output, session) {
     # "Input" tab---------------------------------------------------------------
     dataSplit <- uploadInputFileServer("input")
     downloadExampleFilesServer("example")
-    displayPlotServer("test", dataSplit)
+    displayInputSummaryServer("inputSummary", dataSplit)
     
     # "Output" tab--------------------------------------------------------------
     importExcelFileServer("ExcelOuput", dataSplit)

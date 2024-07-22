@@ -257,11 +257,24 @@ getSplitInputFile <- function(MHfile, designFile, column=c("Polar", "Non-polar")
     ))
 }
 
-
 getSummary <- function(df) {
     summary <- list()
-    info <- c("compoundNumber", "conditionNumber", "table")
-    summary[["compoundNumber"]] <- sum(unname(sapply(df, nrow)))
-    summary[["conditionNumber"]] <- length(table(sapply, function(x) x$Condition))
-    #summary[["table"]] <- 
+    df <- do.call(rbind, lapply(df, function(x) x[ , c("Condition", "Replicate", "Label")]))
+    dfSplit <- split(df, df$Condition)
+    
+    summary[["compoundNumber"]] <- nrow(df)
+    summary[["conditionNumber"]] <- length(unique(df$Condition))
+    table <- do.call(rbind, lapply(dfSplit, function(sample) {
+        condition <- sample[1, "Condition"]
+        replicate <- sort(unique(sample$Replicate))
+        label <- sample[1, "Condition"]
+        compoundPerCondition <- nrow(sample)
+        return(c(condition, length(replicate), compoundPerCondition, label))
+    }))
+    colnames(table) <- c("Condition", "Replicate.Number", "Total.Compound.Number", "Label")
+    row.names(table) <- NULL
+    
+    summary[["table"]] <- table
+    
+    return(summary)
 }

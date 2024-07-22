@@ -2,6 +2,7 @@
 uploadInputFileUI <- function(id) {
     ns <- NS(id)
     tagList(
+        tags$h2("Input"),
         radioButtons(
             inputId=ns("columnType"),
             label="Select a column type",
@@ -21,7 +22,7 @@ uploadInputFileUI <- function(id) {
         ),
         fileInput(
             inputId=ns("MHfile"),
-            label="Upload MassHunter file as CSV with comma as separator",
+            label="Upload MassHunter file as CSV with comma (,) as separator",
             accept=".csv"
         ),
         div(style = "margin-top: -20px"),
@@ -41,7 +42,7 @@ uploadInputFileUI <- function(id) {
         div(style = "margin-top: -20px"),
         tags$p("The design file sums up your experiments. It must contain 4 columns:"),
         tags$ul(
-            tags$li("File Name"),
+            tags$li("File Name (same levels as in the MassHunter file)"),
             tags$li("Condition"),
             tags$li("Replicate"),
             tags$li("Label")
@@ -67,8 +68,9 @@ uploadInputFileServer <- function(id) {
 downloadExampleFilesUI <- function(id) {
     ns <- NS(id)
     tagList(
-        br(),
-        tags$p("Example files are provided below"),
+        tags$hr(),
+        tags$h2("Input example"),
+        tags$p("An example of MassHunter and design files is provided below."),
         downloadLink(
             outputId=ns("download"),
             label="Download example files"
@@ -89,20 +91,39 @@ downloadExampleFilesServer <- function(id) {
     })
 }
 
-# Display df--------------------------------------------------------------------
-displayPlotUI <- function(id) {
+# Main panel--------------------------------------------------------------------
+displayInputSummaryUI <- function(id) {
     ns <- NS(id)
     tagList(
+        tags$h2("Summary"),
+        textOutput(
+            outputId=ns("text1")
+        ),
+        textOutput(
+            outputId=ns("text2")
+        ),
+        br(),
         dataTableOutput(
             outputId=ns("dt")
         )
     )
 }
 
-displayPlotServer <- function(id, data) {
+displayInputSummaryServer <- function(id, data) {
     moduleServer(id, function(input, output, session) {
-        output$dt <- renderDataTable({
-            data()$retained
+        observeEvent(data(), {
+            summary <- getSummary(data())
+            
+            output$text1 <- renderText({
+                paste("Total number of compounds: ", summary$compoundNumber, sep="")
+            })
+            output$text2 <- renderText({
+                paste("Total number of conditions: ", summary$conditionNumber, sep="")
+            })
+            
+            output$dt <- renderDataTable(options = list(pageLength = 25), {
+                summary$table
+            })
         })
     })
 }

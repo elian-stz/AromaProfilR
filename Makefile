@@ -27,6 +27,7 @@ db-compound-init:
 db-compound-rm:
 	$(EXEC) rm -f data/compound_knowledge_base.rds
 	$(EXEC) rm -rf data/descriptor_db/
+	$(EXEC) rm -f data/example_input_files.zip
 
 install: build up db-user-init db-compound-init
 

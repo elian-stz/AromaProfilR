@@ -94,15 +94,15 @@ notification <- function(type, info=NA) {
                 ),
             "too.many.cid" = shiny::showNotification(
                 paste("Entry cannot be added: ", info,
-                      " PubChem CIDs returned instead of one. Choose the template method.",
+                      " CIDs returned instead of one. Choose the template method.",
                       sep=""),
                 type="error",
-                duration=NULL
+                duration=40
                 ),
             "no.cid" = shiny::showNotification(
-                "Entry cannot be added: impossible to convert the input into PubChem CID",
+                "Entry cannot be added: impossible to convert the input into CID",
                 type="error",
-                duration=NULL
+                duration=40
                 ),
             "success.one.addition" = shiny::showNotification(
                 "Succesfully added 1 CAS registry number",
