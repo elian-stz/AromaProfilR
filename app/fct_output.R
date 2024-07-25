@@ -1,9 +1,7 @@
 getUniqueEntries <- function(dt) {
-    CAS <- lapply(dt, function(class) {
-        return(class["CAS."])
-    })
+    CAS <- lapply(dt, function(class) class["CAS."])
     CAS <- unname(unlist(CAS))
-    unique(CAS)
+    CAS <- unique(CAS)
     return(CAS)
 }
 

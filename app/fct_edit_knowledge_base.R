@@ -24,7 +24,7 @@ add.single.cas.number <- function(CAS, chemicalFamily) {
         cas.prefix <- addPrefix(CAS)
         if (!isInKnowledgeBase(cas.prefix)) {
             cid <- cas2cid(CAS) # 1 to 2 PubChem queries
-            if (length(cid) == 1 & !is.na(cid)) {
+            if (length(cid) == 1 && !is.na(cid)) {
                 save.knowledge.base(knowledge.base, overwrite=FALSE)
                 knowledge.base[[cas.prefix]] <- get.entry.info(cid, CAS, chemicalFamily)
                 save.knowledge.base(knowledge.base, overwrite=TRUE)
@@ -32,7 +32,7 @@ add.single.cas.number <- function(CAS, chemicalFamily) {
                 knowledge.base.commit.logs(message)
                 notification("success.one.addition")
             } else {
-                if (is.na(cid) | length(cid) == 0) notification("no.cid")
+                if ((length(cid) == 1 && is.na(cid)) || length(cid) == 0) notification("no.cid")
                 if (length(cid) > 1) notification("too.many.cid", length(cid))
             }
         } else notification("input.already.present")
@@ -42,7 +42,6 @@ add.single.cas.number <- function(CAS, chemicalFamily) {
 get.entry.info <- function(cid, cas, chemicalFamily) {
     properties <- getPropertiesFromCID(cid) # 1 query
     smiles <- properties$CanonicalSMILES # 1 query
-    
     common_name <- getCommonName(cid) # 1 query
     Sys.sleep(1)
     LRI_polar <- getLRI(cid, type="polar", canonicalSMILES=smiles) # 3 queries
@@ -163,8 +162,9 @@ template.to.entry <- function(df, type=c("edit.existing", "add")) {
     
     # Assign each cell of the template to the entry object
     for (attribute in header) {
+        if (attribute == "odor_flavornet") browser()
         cell <- df[1, attribute]
-        if ((is.na(cell) | tolower(cell) == flag) & type == "edit.existing") {
+        if (!is.na(cell) && tolower(cell) == flag && type == "edit.existing") {
             cas.prefix <- addPrefix(df[1, "CAS"])
             entry[[attribute]] <- knowledge.base[[cas.prefix]][[attribute]]
         } else {

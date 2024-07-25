@@ -3,7 +3,7 @@ displayRegisterUI <- function(id) {
     tagList(
         tags$p("The datatable below contains the unknown compound register. It references all compounds found in the MassHunter file that are absent from the knowledge base."),
         tags$p(HTML("Currently, compounds containing <code>TMS</code>, <code>TBDMS</code>, <code>TBS</code>, <code>TIPS</code>, and <code>sil</code> in their name are excluded.")),
-        tags$p("You can download the unknown compound register as TSV below."),
+        tags$p("You can download the unknown compound register as XLSX below."),
         downloadLink(
             outputId=ns("download"),
             label="Download unknown compound register"
@@ -33,12 +33,12 @@ displayRegisterServer <- function(id, dataSplit) {
         })
         
         output$download <- downloadHandler(
-            filename = function() paste(Sys.Date(), "_unknown_compound_register.tsv", sep=""),
+            filename = function() paste(Sys.Date(), "_unknown_compound_register.xlsx", sep=""),
             content = function(con) {
                 file <- "data/unknown_compounds_register.rds"
                 if (file.exists(file)) {
                     df <- readRDS(file)
-                    write.table(df, file=con, sep="\t", row.names=FALSE, quote=FALSE)
+                    openxlsx::write.xlsx(df, file=con, rowNames=FALSE, keepNA=TRUE, na.string="NA")
                 }
             }
         )
