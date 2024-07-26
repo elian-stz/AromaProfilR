@@ -41,3 +41,38 @@ addKnowledgeBaseInfo <- function(dataSplit) {
     
     return(dataSplit)
 }
+
+plot <- function() {
+    test = read.csv(file="2024-07-24_retained.csv", dec=",")
+    test = subset(test, Condition=="MTF3985")
+    
+    test.comp <- split(test, test$CAS.)
+    
+    valid.rep <- sapply(test.comp, function(m) return(length(unique(m$Replicate))))
+    
+    compute_conc_mean_sd <- function(m, n.rep=3) {
+        val <- m$Estimated.Conc.
+        diff.rep <- n.rep - length(unique(m$Replicate))
+        val <- c(val, rep(0, diff.rep))
+        return(c(
+            mean = mean(val),
+            sd = sd(val),
+            rsd = (sd(val)/mean(val)) * 100,
+            min = min(val),
+            max = max(val),
+            n.missing = diff.rep
+        ))
+    }
+    
+    comp.stat <- t(sapply(test.comp, compute_conc_mean_sd))
+    par(mar=c(6.1,4.1,0.1,4.1))
+    plot(comp.stat[,'rsd'], type="h", xlab="", ylab="Standard deviation",
+         axes=FALSE, lwd=5, col=comp.stat[,"n.missing"]+1)
+    axis(2)
+    axis(1, at = 1:nrow(comp.stat), labels = row.names(comp.stat), las=2)
+    legend("topleft", c("No missing", "1 missing", "2 missing"), fill=1:3)
+    par(new=TRUE)
+    plot(comp.stat[,'mean'], type="p", xlab="", ylab="", axes=F, col=4, log="y")
+    axis(4, col=4, col.axis=4)
+    mtext("Mean concentration", side=4, line=2, col=4)
+}

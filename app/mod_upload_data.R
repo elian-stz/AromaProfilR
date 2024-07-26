@@ -26,13 +26,14 @@ uploadInputFileUI <- function(id) {
             accept=".csv"
         ),
         div(style = "margin-top: -20px"),
-        tags$p("The MassHunter file must contain at least 5 columns:"),
+        tags$p("The MassHunter file must contain at least 6 columns:"),
         tags$ul(
             tags$li("CAS#"),
             tags$li("Compound Name"),
             tags$li("Match Factor"),
             tags$li("Component RI"),
-            tags$li("File Name")
+            tags$li("File Name"),
+            tags$li("Estimated Conc")
         ),
         fileInput(
             inputId=ns("designFile"),
@@ -40,12 +41,11 @@ uploadInputFileUI <- function(id) {
             accept=".tsv"
         ),
         div(style = "margin-top: -20px"),
-        tags$p("The design file sums up your experiments. It must contain 4 columns:"),
+        tags$p("The design file sums up your experiments. It must contain 3 columns:"),
         tags$ul(
             tags$li("File Name (same levels as in the MassHunter file)"),
             tags$li("Condition"),
-            tags$li("Replicate"),
-            tags$li("Label")
+            tags$li("Replicate")
         )
     )
 }

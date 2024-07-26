@@ -1,31 +1,31 @@
 #' Return the minimal header of the input CSV file from MassHunter.
 #' 
 #' Get the minimal header of the CSV file from MassHunter. It must contain at 
-#' least 5 columns: `CAS.` (`CAS#`), `Compound.Name` (`Compound Name`),
+#' least 6 columns: `CAS.` (`CAS#`), `Compound.Name` (`Compound Name`),
 #' `Match.Factor` (`Match Factor`), `Component.RI` (`Component RI`),
-#' and `File.Name` (`File Name`). The name between parentheses are the names
-#' obtained directly from MassHunter, whereas those that are not are the names
-#' that get automatically converted by R.
+#' `File.Name` (`File Name`) and `Estimated.Conc` (`Estimated Conc`).
+#' The name between parentheses are the names obtained directly from MassHunter,
+#' whereas those that are not are the names that get automatically converted by R.
 #' @return vector containing the minimal header of the input CSV file
 getMinimalHeader <- function() {
     return(c("CAS.",          # chr   : CAS registry number
              "Compound.Name", # chr   : common name
              "Match.Factor",  # double: match factor calculated by MassHunter
              "Component.RI",  # double: experimental LRI
-             "File.Name"      # chr   : sample name
+             "File.Name",     # chr   : sample name
+             "Estimated.Conc" # double: estimated concentration
     ))
-    #"Component.RT", "Component.Area", "Component.Height"
 }
 
 #' Check the integrity of the input CSV file's header.
 #' 
 #' Check whether the header of the input CSV file from MassHunter contains
 #' the minimal header: `CAS.`, `Compound.Name`, `Match.Factor`, `Component.RI`,
-#' and `File.Name`. Display a notification if it does not match.
+#' `File.Name`, and `Estimated.Conc`. Display a notification if it does not match.
 #' @param header header of the input CSV file from MassHunter
 #' @return logical
 #' @examples
-#' checkFileHeader("CAS.", "Compound.Name", "Match.Factor", "Component.RI", "File.Name")
+#' checkFileHeader("CAS.", "Compound.Name", "Match.Factor", "Component.RI", "File.Name", "Estimated.Conc")
 #' checkFileHeader("CAS.", "Compound.Name", "Match.Factor")
 checkFileHeader <- function(header) {
     expectedMinimalHeader <- getMinimalHeader()
@@ -187,7 +187,7 @@ splitAnalysableTag <- function(df, cutoff=30) {
 #' `File.Name` levels fit with those of the MassHunter file.
 #' 
 #' Check the integrity file by verifying its header (`File.Name`, `Condition`, 
-#' `Replicate`, and `Label`) as well as the correspondance between the levels
+#' and `Replicate`) as well as the correspondance between the levels
 #' of the design file from the `File.Name` and those of the MassHunter file.
 #' @param designFileElement element of the design file: header or levels as vector
 #' @param MHfileElement element of the MassHunter file: header or levels as vector (default: NA)
@@ -195,11 +195,11 @@ splitAnalysableTag <- function(df, cutoff=30) {
 #' @return logical: TRUE if the integrity of the design file is verified
 #' @examples
 #' checkDesignFileIntegrity(c("File.Name", "Condition"), NA, "header")
-#' checkDesignFileIntegrity(c("File.Name", "Condition", "Replicate", "Label"), NA, "header")
+#' checkDesignFileIntegrity(c("File.Name", "Condition", "Replicate"), NA, "header")
 #' checkDesignFileIntegrity(c("control.D"), c("control.D", "yeast.D"), "levels")
 #' checkDesignFileIntegrity(c("control.D", "yeast.D"), c("control.D", "yeast.D"), "levels")
 checkDesignFileIntegrity <- function(designFileElement, MHfileElement, check=c("levels", "header")) {
-    if (check == "header" && is.na(MHfileElement)) expected <- c("File.Name", "Condition", "Replicate", "Label")
+    if (check == "header" && is.na(MHfileElement)) expected <- c("File.Name", "Condition", "Replicate")
     if (check == "levels" && length(MHfileElement) > 1) expected <- MHfileElement
     
     # check the differences between the header or the levels 
@@ -231,7 +231,7 @@ checkDesignFileIntegrity <- function(designFileElement, MHfileElement, check=c("
 #' @examples
 #' getSplitInputFile(myMHfile, myDesignFile, "Polar", "Median", 30)
 #' getSplitInputFile(myMHfile, myDesignFile, "Non-polar", "Mean", 40)
-getSplitInputFile <- function(MHfile, designFile, column=c("Polar", "Non-polar"), mode=c("Median", "Mean"), cutoff=30) {
+getSplitInputFile <- function(MHfile, designFile=NULL, column=c("Polar", "Non-polar"), mode=c("Median", "Mean"), cutoff=30) {
     # Check file integrity of design file and MassHunter file
     if (!checkFileIntegrity(MHfile)) return(NULL)
     if (!checkDesignFileIntegrity(colnames(designFile), NA, "header")) return(NULL)
@@ -242,7 +242,7 @@ getSplitInputFile <- function(MHfile, designFile, column=c("Polar", "Non-polar")
     if (column == "Non-polar") type <- "LRI_nonpolar"
     
     # Merge design file and MassHunter file
-    MHfile <- merge(x=MHfile, y=designFile, all.x=TRUE)
+    if (!is.null(designFile)) MHfile <- merge(x=MHfile, y=designFile, all.x=TRUE)
 
     # Split into 4 groups: retained, notRetained, noLRI, unknown
     firstSplit <- splitFileByTag(MHfile, type)
@@ -259,7 +259,7 @@ getSplitInputFile <- function(MHfile, designFile, column=c("Polar", "Non-polar")
 
 getSummary <- function(df) {
     summary <- list()
-    df <- do.call(rbind, lapply(df, function(x) x[ , c("Condition", "Replicate", "Label")]))
+    df <- do.call(rbind, lapply(df, function(x) x[ , c("Condition", "Replicate")]))
     dfSplit <- split(df, df$Condition)
     
     summary[["compoundNumber"]] <- nrow(df)
@@ -267,11 +267,10 @@ getSummary <- function(df) {
     table <- do.call(rbind, lapply(dfSplit, function(sample) {
         condition <- sample[1, "Condition"]
         replicate <- sort(unique(sample$Replicate))
-        label <- sample[1, "Condition"]
         compoundPerCondition <- nrow(sample)
-        return(c(condition, length(replicate), compoundPerCondition, label))
+        return(c(condition, length(replicate), compoundPerCondition))
     }))
-    colnames(table) <- c("Condition", "Replicate.Number", "Total.Compound.Number", "Label")
+    colnames(table) <- c("Condition", "Replicate.Number", "Total.Compound.Number")
     row.names(table) <- NULL
     
     summary[["table"]] <- table
