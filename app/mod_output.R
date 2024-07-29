@@ -23,8 +23,8 @@ importExcelFileServer <- function(id, data) {
 showPlotUI <- function(id) {
     ns <- NS(id)
     tagList(
-        plotOutput(
-            outputId=ns("concentrationPlot")
+        uiOutput(
+            outputId=ns("plots")
         )
     )
 }
@@ -32,13 +32,19 @@ showPlotUI <- function(id) {
 showPlotServer <- function(id, data) {
     moduleServer(id, function(input, output, session) {
         
-        plots <- observeEvent(data(), {
+        plots <- reactive({
+            req(data())
             plotAllConditions(data())
         })
         
-        lapply(plots, function(p) {
-            output$concentrationPlot <- renderPlot({
-                p
+        output$plots <- renderUI({
+            lapply(1:length(plots()), function(i) {
+                id <- paste0(session$ns("subplot"), i)
+                plotOutput(outputId=id)
+                
+            output[[id]] <- renderPlot({
+                plots()[[i]]
+            })
             })
         })
     })

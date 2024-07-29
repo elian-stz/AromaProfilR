@@ -57,9 +57,6 @@ compute_conc_mean_sd <- function(m, n.rep=3) {
 }
 
 plotConcentration <- function(subsetDf) {
-    #test = read.csv(file="2024-07-24_retained.csv", dec=",")
-    #test = subset(test, Condition=="MTF3985")
-    
     test.comp <- split(subsetDf, subsetDf$CAS.)
     
     valid.rep <- sapply(test.comp, function(m) return(length(unique(m$Replicate))))
@@ -75,6 +72,7 @@ plotConcentration <- function(subsetDf) {
     plot(comp.stat[,'mean'], type="p", xlab="", ylab="", axes=F, col=4, log="y")
     axis(4, col=4, col.axis=4)
     mtext("Mean concentration", side=4, line=2, col=4)
+    title(subsetDf[1, "Condition"], line=-2)
     
     p <- recordPlot()
     return(p)

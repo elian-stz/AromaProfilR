@@ -27,7 +27,6 @@ displayRegisterServer <- function(id, dataSplit) {
         
         output$dt <- renderDataTable({
             refreshTrigger()
-            #invalidateLater(2000, session) #10000
             file <- "data/unknown_compounds_register.rds"
             if (file.exists(file)) readRDS(file) else data.frame()
         })
