@@ -16,7 +16,8 @@ ui <- fluidPage(
                         )
                ),
                tabPanel(title="Output",
-                        importExcelFileUI("ExcelOuput")
+                        importExcelFileUI("ExcelOuput"),
+                        showPlotUI("concentrationPlots")
                ),
                tabPanel(title="Unknown compound register",
                         displayRegisterUI("register")
@@ -75,6 +76,7 @@ server <- function(input, output, session) {
     
     # "Output" tab--------------------------------------------------------------
     importExcelFileServer("ExcelOuput", dataSplit)
+    showPlotServer("concentrationPlots", dataSplit)
     
     # "Unknown compound register" tab-------------------------------------------
     displayRegisterServer("register", dataSplit)

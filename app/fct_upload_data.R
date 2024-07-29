@@ -3,7 +3,7 @@
 #' Get the minimal header of the CSV file from MassHunter. It must contain at 
 #' least 6 columns: `CAS.` (`CAS#`), `Compound.Name` (`Compound Name`),
 #' `Match.Factor` (`Match Factor`), `Component.RI` (`Component RI`),
-#' `File.Name` (`File Name`) and `Estimated.Conc` (`Estimated Conc`).
+#' `File.Name` (`File Name`) and `Estimated.Conc.` (`Estimated Conc.`).
 #' The name between parentheses are the names obtained directly from MassHunter,
 #' whereas those that are not are the names that get automatically converted by R.
 #' @return vector containing the minimal header of the input CSV file
@@ -13,7 +13,7 @@ getMinimalHeader <- function() {
              "Match.Factor",  # double: match factor calculated by MassHunter
              "Component.RI",  # double: experimental LRI
              "File.Name",     # chr   : sample name
-             "Estimated.Conc" # double: estimated concentration
+             "Estimated.Conc." # double: estimated concentration
     ))
 }
 
@@ -21,11 +21,11 @@ getMinimalHeader <- function() {
 #' 
 #' Check whether the header of the input CSV file from MassHunter contains
 #' the minimal header: `CAS.`, `Compound.Name`, `Match.Factor`, `Component.RI`,
-#' `File.Name`, and `Estimated.Conc`. Display a notification if it does not match.
+#' `File.Name`, and `Estimated.Conc.`. Display a notification if it does not match.
 #' @param header header of the input CSV file from MassHunter
 #' @return logical
 #' @examples
-#' checkFileHeader("CAS.", "Compound.Name", "Match.Factor", "Component.RI", "File.Name", "Estimated.Conc")
+#' checkFileHeader("CAS.", "Compound.Name", "Match.Factor", "Component.RI", "File.Name", "Estimated.Conc.")
 #' checkFileHeader("CAS.", "Compound.Name", "Match.Factor")
 checkFileHeader <- function(header) {
     expectedMinimalHeader <- getMinimalHeader()

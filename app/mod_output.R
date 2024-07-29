@@ -19,3 +19,27 @@ importExcelFileServer <- function(id, data) {
         )
     })
 }
+
+showPlotUI <- function(id) {
+    ns <- NS(id)
+    tagList(
+        plotOutput(
+            outputId=ns("concentrationPlot")
+        )
+    )
+}
+
+showPlotServer <- function(id, data) {
+    moduleServer(id, function(input, output, session) {
+        
+        plots <- observeEvent(data(), {
+            plotAllConditions(data())
+        })
+        
+        lapply(plots, function(p) {
+            output$concentrationPlot <- renderPlot({
+                p
+            })
+        })
+    })
+}

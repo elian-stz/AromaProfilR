@@ -42,30 +42,30 @@ addKnowledgeBaseInfo <- function(dataSplit) {
     return(dataSplit)
 }
 
-plot <- function() {
-    test = read.csv(file="2024-07-24_retained.csv", dec=",")
-    test = subset(test, Condition=="MTF3985")
+compute_conc_mean_sd <- function(m, n.rep=3) {
+    val <- m$Estimated.Conc.
+    diff.rep <- n.rep - length(unique(m$Replicate))
+    val <- c(val, rep(0, diff.rep))
+    return(c(
+        mean = mean(val),
+        sd = sd(val),
+        rsd = (sd(val)/mean(val)) * 100,
+        min = min(val),
+        max = max(val),
+        n.missing = diff.rep
+    ))
+}
+
+plotConcentration <- function(subsetDf) {
+    #test = read.csv(file="2024-07-24_retained.csv", dec=",")
+    #test = subset(test, Condition=="MTF3985")
     
-    test.comp <- split(test, test$CAS.)
+    test.comp <- split(subsetDf, subsetDf$CAS.)
     
     valid.rep <- sapply(test.comp, function(m) return(length(unique(m$Replicate))))
-    
-    compute_conc_mean_sd <- function(m, n.rep=3) {
-        val <- m$Estimated.Conc.
-        diff.rep <- n.rep - length(unique(m$Replicate))
-        val <- c(val, rep(0, diff.rep))
-        return(c(
-            mean = mean(val),
-            sd = sd(val),
-            rsd = (sd(val)/mean(val)) * 100,
-            min = min(val),
-            max = max(val),
-            n.missing = diff.rep
-        ))
-    }
-    
+
     comp.stat <- t(sapply(test.comp, compute_conc_mean_sd))
-    par(mar=c(6.1,4.1,0.1,4.1))
+    par(mar=c(6.1, 4.1, 0.1, 4.1))
     plot(comp.stat[,'rsd'], type="h", xlab="", ylab="Standard deviation",
          axes=FALSE, lwd=5, col=comp.stat[,"n.missing"]+1)
     axis(2)
@@ -75,4 +75,18 @@ plot <- function() {
     plot(comp.stat[,'mean'], type="p", xlab="", ylab="", axes=F, col=4, log="y")
     axis(4, col=4, col.axis=4)
     mtext("Mean concentration", side=4, line=2, col=4)
+    
+    p <- recordPlot()
+    return(p)
+}
+
+plotAllConditions <- function(dataSplit) {
+    dataSplit <- dataSplit[["retained"]]
+    conditions <- unique(dataSplit$Condition)
+    plots <- list()
+    for (condition in conditions) {
+        subsetDf <- subset(dataSplit, Condition == condition)
+        plots[[condition]] <- plotConcentration(subsetDf)
+    }
+    return(plots)
 }
