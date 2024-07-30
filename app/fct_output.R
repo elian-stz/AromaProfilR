@@ -46,10 +46,15 @@ compute_conc_mean_sd <- function(m, n.rep=3) {
     val <- m$Estimated.Conc.
     diff.rep <- n.rep - length(unique(m$Replicate))
     val <- c(val, rep(0, diff.rep))
+    rsd <- (sd(val)/mean(val)) * 100
+    if(is.na(rsd)) {
+        rsd <- -5
+    }
+    #browser()
     return(c(
         mean = mean(val),
         sd = sd(val),
-        rsd = (sd(val)/mean(val)) * 100,
+        rsd = rsd,
         min = min(val),
         max = max(val),
         n.missing = diff.rep
@@ -58,16 +63,24 @@ compute_conc_mean_sd <- function(m, n.rep=3) {
 
 plotConcentration <- function(subsetDf) {
     test.comp <- split(subsetDf, subsetDf$CAS.)
+    n.rep <- length(unique(subsetDf$File.Name))
     
     valid.rep <- sapply(test.comp, function(m) return(length(unique(m$Replicate))))
-
-    comp.stat <- t(sapply(test.comp, compute_conc_mean_sd))
+    
+    comp.stat <- t(sapply(test.comp, compute_conc_mean_sd, n.rep=n.rep))
+    #browser()
+    n.max.missing <- max(comp.stat[,"n.missing"])
+    color <- c("green", "red")
+    if(n.max.missing>1) {
+        color <- c("green", colorRampPalette(c("orange", "red"))(n.max.missing))
+    }
     par(mar=c(6.1, 4.1, 0.1, 4.1))
-    plot(comp.stat[,'rsd'], type="h", xlab="", ylab="Standard deviation",
-         axes=FALSE, lwd=5, col=comp.stat[,"n.missing"]+1)
+    plot(comp.stat[,'rsd'], type="h", xlab="", ylab="Relative standard deviation",
+         axes=FALSE, lwd=5, col=color[comp.stat[,"n.missing"]+1])
     axis(2)
     axis(1, at = 1:nrow(comp.stat), labels = row.names(comp.stat), las=2)
-    legend("topleft", c("No missing", "1 missing", "2 missing"), fill=1:3)
+    legend("topleft", paste(0:n.max.missing, "missing"), fill=color)
+    
     par(new=TRUE)
     plot(comp.stat[,'mean'], type="p", xlab="", ylab="", axes=F, col=4, log="y")
     axis(4, col=4, col.axis=4)

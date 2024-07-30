@@ -47,5 +47,35 @@ showPlotServer <- function(id, data) {
             })
             })
         })
+        return(plots)
+    })
+}
+
+importPDFUI <- function(id) { 
+    ns <- NS(id)
+    tagList(
+        br(),
+        downloadLink(
+            outputId=ns("downloadPDF"),
+            label="Download concentration plots as PDF"
+        )
+    )
+}
+
+importPDFServer <- function(id, plots) {
+    moduleServer(id, function(input, output, session) {
+        output$downloadPDF <- downloadHandler(
+            filename = function() paste(Sys.Date(), "_concentration_plots.pdf", sep=""),
+            content = function(con) {
+                pdf(con, onefile=TRUE, paper="a4r")
+                for (i in 1:length(plots())) print(plots()[[i]])
+                
+                output <- capture.output(sessionInfo(c("webchem", "PubChemR", "openxlsx", "shinymanager", "shinyjs", "shiny")))
+                plot.new()
+                text(0, 1, paste(output, collapse = "\n"), adj = c(0, 1), cex = 0.7, family = "mono")
+                
+                dev.off()#dev.off(dev.list())
+            }
+        )
     })
 }
