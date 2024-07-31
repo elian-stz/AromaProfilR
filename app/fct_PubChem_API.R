@@ -125,7 +125,7 @@ getLRI <- function(CID, type=c("polar", "non-polar", "semi-standard non-polar"),
     if (type == "semi-standard non-polar") name <- "Semi-standard non-polar"
     
     # Query PubChem
-    object <- try(PubChemR::get_pug_view(identifier=CID, domain="compound", annotation = "Data"))
+    object <- try(PubChemR::get_pug_view(identifier=CID, domain="compound", annotation = "data"))
     if (inherits(object, "try-error") | length(object) == 0) return(NA)
     section <- try(PubChemR::sectionList(object, .pattern="Chemical and Physical Properties"))
     if (inherits(section, "try-error") | length(section) == 0) return(NA)

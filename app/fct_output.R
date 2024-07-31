@@ -74,7 +74,7 @@ plotConcentration <- function(subsetDf) {
     if(n.max.missing>1) {
         color <- c("green", colorRampPalette(c("orange", "red"))(n.max.missing))
     }
-    par(mar=c(6.1, 4.1, 0.1, 4.1))
+    par(mar=c(6.1, 4.1, 2.1, 4.1))
     plot(comp.stat[,'rsd'], type="h", xlab="", ylab="Relative standard deviation",
          axes=FALSE, lwd=5, col=color[comp.stat[,"n.missing"]+1])
     axis(2)
@@ -84,8 +84,8 @@ plotConcentration <- function(subsetDf) {
     par(new=TRUE)
     plot(comp.stat[,'mean'], type="p", xlab="", ylab="", axes=F, col=4, log="y")
     axis(4, col=4, col.axis=4)
-    mtext("Mean concentration", side=4, line=2, col=4)
-    title(subsetDf[1, "Condition"], line=-2)
+    mtext("Mean estimated concentration", side=4, line=2, col=4)
+    title(subsetDf[1, "Condition"], line=1)
     
     p <- recordPlot()
     return(p)

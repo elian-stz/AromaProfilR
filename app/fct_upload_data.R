@@ -259,6 +259,7 @@ getSplitInputFile <- function(MHfile, designFile=NULL, column=c("Polar", "Non-po
 
 getSummary <- function(df) {
     summary <- list()
+    summary[["sampleNumber"]] <- length(unique(df[["unknown"]]$File.Name))
     df <- do.call(rbind, lapply(df, function(x) x[ , c("Condition", "Replicate")]))
     dfSplit <- split(df, df$Condition)
     

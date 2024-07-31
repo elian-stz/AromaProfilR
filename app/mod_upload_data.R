@@ -18,14 +18,14 @@ uploadInputFileUI <- function(id) {
             label="Enter a LRI difference threshold",
             value=30,
             min=1,
-            max=300
+            max=1000
         ),
         fileInput(
             inputId=ns("MHfile"),
-            label="Upload MassHunter file as CSV with comma (,) as separator",
+            label="Upload MassHunter file as CSV with comma as column separator",
             accept=".csv"
         ),
-        div(style = "margin-top: -20px"),
+        tags$div(style = "margin-top: -20px"),
         tags$p("The MassHunter file must contain at least 6 columns:"),
         tags$ul(
             tags$li("CAS#"),
@@ -33,35 +33,44 @@ uploadInputFileUI <- function(id) {
             tags$li("Match Factor"),
             tags$li("Component RI"),
             tags$li("File Name"),
-            tags$li("Estimated Conc")
+            tags$li("Estimated Conc.")
         ),
         fileInput(
             inputId=ns("designFile"),
             label="Upload design file as TSV",
             accept=".tsv"
         ),
-        div(style = "margin-top: -20px"),
+        tags$div(style = "margin-top: -20px"),
         tags$p("The design file sums up your experiments. It must contain 3 columns:"),
         tags$ul(
             tags$li("File Name (same levels as in the MassHunter file)"),
             tags$li("Condition"),
             tags$li("Replicate")
+        ),
+        br(),
+        actionButton(
+            inputId=ns("run"),
+            label="Run"
         )
     )
 }
 
 uploadInputFileServer <- function(id) {
     moduleServer(id, function(input, output, session) {
-            data <- reactive({
-                req(input$MHfile, input$designFile)
-                MHdf <- try(read.csv(input$MHfile$datapath, na.strings=c("", "NA")))
-                designdf <- try(read.csv(input$designFile$datapath, na.strings=c("", "NA"), sep="\t"))
-                if (inherits(MHdf, "try-error") || inherits(designdf, "try-error")) return(NULL)
-                if (input$cutoff > 0 & input$cutoff <= 300) {
-                    getSplitInputFile(MHdf, designdf, input$columnType, input$method, input$cutoff)
-                }
-            })
-            return(data)
+        data <- reactiveVal(NULL)
+        
+        observeEvent(input$run, {
+            req(input$MHfile, input$designFile)
+            
+            MHdf <- try(read.csv(input$MHfile$datapath, na.strings=c("", "NA")))
+            designdf <- try(read.csv(input$designFile$datapath, na.strings=c("", "NA"), sep="\t"))
+            if (inherits(MHdf, "try-error") || inherits(designdf, "try-error")) data(NULL)
+            if (input$cutoff > 0 & input$cutoff <= 1000) {
+                classification <- getSplitInputFile(MHdf, designdf, input$columnType, input$method, input$cutoff)
+                data(classification)
+            }
+        })
+        return(data)
     })
 }
 
@@ -102,6 +111,9 @@ displayInputSummaryUI <- function(id) {
         textOutput(
             outputId=ns("text2")
         ),
+        textOutput(
+            outputId=ns("text3")
+        ),
         br(),
         dataTableOutput(
             outputId=ns("dt")
@@ -118,6 +130,9 @@ displayInputSummaryServer <- function(id, data) {
                 paste("Total number of compounds: ", summary$compoundNumber, sep="")
             })
             output$text2 <- renderText({
+                paste("Total number of samples: ", summary$sampleNumber, sep="")
+            })
+            output$text3 <- renderText({
                 paste("Total number of conditions: ", summary$conditionNumber, sep="")
             })
             

@@ -2,6 +2,7 @@ displayRegisterUI <- function(id) {
     ns <- NS(id)
     tagList(
         tags$p("The datatable below contains the unknown compound register. It references all compounds found in the MassHunter file that are absent from the knowledge base."),
+        tags$p("If ever you find an interesting aroma in the register, please contact the administrators so they can add it to the knowledge base."),
         tags$p(HTML("Compounds containing <code>TMS</code>, <code>TBDMS</code>, <code>TBS</code>, <code>TIPS</code>, or <code>sil</code> in their name are excluded.")),
         tags$p("You can download the unknown compound register as XLSX below."),
         downloadLink(
