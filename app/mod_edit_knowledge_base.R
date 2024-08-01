@@ -17,7 +17,7 @@ generateTemplateUI <- function(id) {
             tags$li("Edit the template"),
             tags$ul(
                 tags$li("Modify existing entries or add new ones"),
-                tags$li("Decimal separators must be points"),
+                tags$li("Decimal separators must be dots"),
                 tags$li("LRI values must be separated by semicolons (;)"),
                 tags$li(HTML("Use the <code>keep.previous</code> flag to keep previous information")),
             ),

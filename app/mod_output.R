@@ -32,7 +32,7 @@ importExcelFileServer <- function(id, data) {
 showPlotUI <- function(id) {
     ns <- NS(id)
     tagList(
-        tags$h2("Concentration plots displayed"),
+        tags$h2("Plots"),
         uiOutput(
             outputId=ns("plots")
         )

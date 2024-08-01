@@ -1,7 +1,7 @@
 source("global.R")
 
 ui <- fluidPage(
-    includeCSS("www/global_style.css"),
+    includeCSS("www/global.css"),
     
     navbarPage(title="AromaProfilR", id="main", windowTitle="AromaProfilR",
                tabPanel(title="Input",
@@ -48,6 +48,11 @@ ui <- fluidPage(
 
 # Wrap UI with secure_app
 ui <- secure_app(ui, enable_admin = TRUE,
+                 tags_top=tags$div(
+                     tags$img(
+                         src = "/aromaprofilr.png", width = 200
+                      )
+                 ),
                  tags_bottom = tags$div(
                    tags$p(style="text-align: center;",
                      	  "To create an account or for any questions, please contact the PTV:"
