@@ -6,7 +6,7 @@ uploadInputFileUI <- function(id) {
         radioButtons(
             inputId=ns("columnType"),
             label="Select a column type",
-            choices=c("Polar", "Non-polar")
+            choices=c("Polar", "Non-polar"),
         ),
         radioButtons(
             inputId=ns("method"),
@@ -37,8 +37,8 @@ uploadInputFileUI <- function(id) {
         ),
         fileInput(
             inputId=ns("designFile"),
-            label="Upload design file as TSV",
-            accept=".tsv"
+            label="OPTIONAL: Upload design file as TSV or XLSX",
+            accept=c(".tsv", ".csv", ".xlsx")
         ),
         tags$div(style = "margin-top: -20px"),
         tags$p("The design file sums up your experiments. It must contain 3 columns:"),
@@ -60,11 +60,32 @@ uploadInputFileServer <- function(id) {
         data <- reactiveVal(NULL)
         
         observeEvent(input$run, {
-            req(input$MHfile, input$designFile)
+            req(input$MHfile)
             
+            # Read input
+            ## MassHunter file
             MHdf <- try(read.csv(input$MHfile$datapath, na.strings=c("", "NA")))
-            designdf <- try(read.csv(input$designFile$datapath, na.strings=c("", "NA"), sep="\t"))
-            if (inherits(MHdf, "try-error") || inherits(designdf, "try-error")) data(NULL)
+            if (inherits(MHdf, "try-error")) data(NULL)
+            ## Design file
+            if (!is.null(input$designFile)) {
+                file_ext <- tools::file_ext(input$designFile$name)
+                designdf <- switch(file_ext,
+                               "csv" = try(read.csv(input$designFile$datapath, na.strings=c("", "NA"), sep="\t")),
+                               "tsv" = try(read.csv(input$designFile$datapath, na.strings=c("", "NA"), sep="\t")),
+                               "xlsx" = try(openxlsx::read.xlsx(input$designFile$datapath, sheet=1)),
+                               stop("Invalid file type")
+                )
+            } else {
+                # No design file provided: create design file where one sample = one condition
+                samples <- unique(MHdf$File.Name)
+                designdf <- data.frame(
+                    File.Name = samples,
+                    Condition = samples,
+                    Replicate = rep(1, length(samples))
+                ) 
+            }
+            
+            # Run analysis
             if (input$cutoff > 0 & input$cutoff <= 1000) {
                 classification <- getSplitInputFile(MHdf, designdf, input$columnType, input$method, input$cutoff)
                 data(classification)

@@ -1,3 +1,15 @@
-body {
-        background-color: #6a0e39;
+.btn-primary {
+    color: #ffffff;
+    background-color: #6a0e39;
+    border-color: #6a0e39;
+}
+
+.panel-primary, .form-control:focus {
+	border-color: #6a0e39;
+}
+
+.btn-primary:hover, .btn-primary:active:hover, .btn-primary:focus {
+	color: #000000;
+        background-color: #eec07b;
+        border-color: #eec07b;
 }

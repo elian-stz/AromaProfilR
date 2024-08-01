@@ -1,6 +1,7 @@
 source("global.R")
 
 ui <- fluidPage(
+    title="AromaProfilR",
     includeCSS("www/global.css"),
     
     navbarPage(title="AromaProfilR", id="main", windowTitle="AromaProfilR",
@@ -49,9 +50,8 @@ ui <- fluidPage(
 # Wrap UI with secure_app
 ui <- secure_app(ui, enable_admin = TRUE,
                  tags_top=tags$div(
-                     tags$img(
-                         src = "/aromaprofilr.png", width = 200
-                      )
+                     tags$head(tags$link(rel="stylesheet", type="text/css", href="login.css")),
+                     tags$img(src="/aromaprofilr.png", width=150)
                  ),
                  tags_bottom = tags$div(
                    tags$p(style="text-align: center;",
@@ -61,7 +61,13 @@ ui <- secure_app(ui, enable_admin = TRUE,
 		                  admin1.mail, br(),
 			              admin2.mail, br(),
 			              admin3.mail
-                   )
+                   ),
+		           tags$footer(style="text-align: center;",
+		               tags$img(src="/logo_inrae.jpg", width="40%"),
+		               br(),br(),
+		               tags$img(src="/logo_spo.png", width=75*1.25),
+		               tags$img(src="/logo_pechrouge.png", width=150*1.25)
+		           )
                  )
 )
 
