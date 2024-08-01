@@ -49,7 +49,7 @@ compute_conc_mean_sd <- function(m, n.rep=3) {
     rsd <- (sd(val)/mean(val))*100
     if (is.na(rsd)) rsd <- -5
     meanConc <- mean(val)
-    if (is.na(meanConc) || meanConc < 0) meanConc <- 10e-5
+    if (is.na(meanConc) || meanConc < 0) meanConc <- 10e-3
     return(c(
         mean = meanConc,
         sd = sd(val),

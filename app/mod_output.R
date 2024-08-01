@@ -53,7 +53,7 @@ showPlotServer <- function(id, data) {
                 plotOutput(outputId=id)
                 
             output[[id]] <- renderPlot({
-                plots()[[i]]
+                plots()[i]
             })
             })
         })
