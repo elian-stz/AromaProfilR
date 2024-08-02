@@ -73,21 +73,25 @@ plotConcentration <- function(subsetDf) {
     if(n.max.missing>1) {
         color <- c("green", colorRampPalette(c("orange", "red"))(n.max.missing))
     }
-    par(mar=c(6.1, 4.1, 2.1, 4.1))
-    plot(comp.stat[,"rsd"], type="h", xlab="", ylab="Relative standard deviation",
-         axes=FALSE, lwd=5, col=color[comp.stat[,"n.missing"]+1])
-    axis(2)
-    axis(1, at = 1:nrow(comp.stat), labels = row.names(comp.stat), las=2)
-    legend("topleft", paste(0:n.max.missing, "missing"), fill=color)
+    plot_content <- reactive({
+        par(mar=c(6.1, 4.1, 2.1, 4.1))
+        plot(comp.stat[,"rsd"], type="h", xlab="", ylab="Relative standard deviation",
+             axes=FALSE, lwd=5, col=color[comp.stat[,"n.missing"]+1])
+        axis(2)
+        axis(1, at = 1:nrow(comp.stat), labels = row.names(comp.stat), las=2)
+        legend("topleft", paste(0:n.max.missing, "missing"), fill=color)
     
-    par(new=TRUE)
-    plot(comp.stat[,'mean'], type="p", xlab="", ylab="", axes=F, col=4, log="y")
-    axis(4, col=4, col.axis=4)
-    mtext("Mean estimated concentration", side=4, line=2, col=4)
-    title(subsetDf[1, "Condition"], line=1)
+        par(new=TRUE)
+        plot(comp.stat[,'mean'], type="p", xlab="", ylab="", axes=F, col=4, log="y")
+        axis(4, col=4, col.axis=4)
+        mtext("Mean estimated concentration", side=4, line=2, col=4)
+        title(subsetDf[1, "Condition"], line=1)
     
-    p <- recordPlot()
-    return(p)
+        p <- recordPlot()
+        p
+    })
+    
+    return(plot_content)
 }
 
 plotAllConditions <- function(dataSplit) {

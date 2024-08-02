@@ -80,7 +80,7 @@ server <- function(input, output, session) {
         )
     )
     
-    # Hide the tab "Edit knowledge base" to non admin users
+    # Hide the tab "Edit knowledge base" to non-admin
     observe({
         if (!is.null(res_auth$user) && reactiveValuesToList(res_auth)$admin == FALSE) {
             removeTab("main", target="Edit knowledge base")

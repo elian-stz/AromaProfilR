@@ -53,7 +53,8 @@ showPlotServer <- function(id, data) {
                 plotOutput(outputId=id)
                 
             output[[id]] <- renderPlot({
-                plots()[i]
+                p <- req(plots()[[i]]())
+                replayPlot(p)
             })
             })
         })
@@ -82,7 +83,7 @@ importPDFServer <- function(id, plots) {
             filename = function() paste(Sys.Date(), "_concentration_plots.pdf", sep=""),
             content = function(con) {
                 pdf(con, onefile=TRUE, width=12, height=8)#paper="a4r")
-                for (i in 1:length(plots())) print(plots()[[i]])
+                for (i in 1:length(plots())) print(plots()[[i]]())
                 output <- capture.output(sessionInfo(c("webchem", "PubChemR", "openxlsx", "shinymanager", "shinyjs", "shiny")))
                 output <- c(as.character(Sys.time()), output)
                 plot(0,0, type="n", xlim=c(0,2), ylim=c(0,1), xlab="", ylab="", axes=F)
