@@ -200,7 +200,7 @@ splitAnalysableTag <- function(df, cutoff=30) {
 #' checkDesignFileIntegrity(c("control.D", "yeast.D"), c("control.D", "yeast.D"), "levels")
 checkDesignFileIntegrity <- function(designFileElement, MHfileElement, check=c("levels", "header")) {
     if (check == "header" && is.na(MHfileElement)) expected <- c("File.Name", "Condition", "Replicate")
-    if (check == "levels" && length(MHfileElement) > 1) expected <- MHfileElement
+    if (check == "levels" && length(MHfileElement) >= 1) expected <- MHfileElement
     
     # check the differences between the header or the levels 
     difference <- setdiff(expected, designFileElement)

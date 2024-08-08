@@ -36,6 +36,9 @@ addKnowledgeBaseInfo <- function(dataSplit) {
     
     # Join split input file
     dataSplit <- lapply(dataSplit, function(group) {
+        if(is.null(group)) {
+            return(data.frame(Message = "No compound retained in this section"))
+        }
         merge(x = group, y = dfWithKnowledgeBaseInfo, by = "CAS.", all.x = TRUE)
     })
     
