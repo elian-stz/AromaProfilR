@@ -9,7 +9,7 @@ generateTemplateUI <- function(id) {
                 inputId=ns("textField"),
                 label=HTML("Enter CAS registry number(s) separated by spaces, or type <code>all</code> or <code>empty</code>")
             ),
-            downloadLink(
+            downloadButton(
                 outputId=ns("download"),
                 label="Download template"
             ),

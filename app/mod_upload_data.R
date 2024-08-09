@@ -101,7 +101,7 @@ downloadExampleFilesUI <- function(id) {
         tags$hr(),
         tags$h2("Input example"),
         tags$p("An example of MassHunter and design files is provided below."),
-        downloadLink(
+        downloadButton(
             outputId=ns("download"),
             label="Download example files"
         )

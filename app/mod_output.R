@@ -10,7 +10,7 @@ importExcelFileUI <- function(id) {
             tags$li(HTML("<code>unknown</code>: compounds absent from the knowledge base"))
         ),
         tags$p("Each sheet of the Excel file corresponds to one of the 4 groups."),
-        downloadLink(
+        downloadButton(
             outputId=ns("downloadExcel"),
             label="Download classification file as XLSX"
         )
@@ -70,7 +70,7 @@ importPDFUI <- function(id) {
         tags$p(HTML("A concentration plot sums up each condition. It displays relative standard deviation, average estimated concentration, and number of apparitions for every <b>retained</b> compound.")),
         tags$p("If you did not provide any design file, each sample will be considered a single condition."),
         tags$p("You can download the plots as a single PDF file."),
-        downloadLink(
+        downloadButton(
             outputId=ns("downloadPDF"),
             label="Download concentration plots as PDF"
         )
